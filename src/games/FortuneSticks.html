@@ -1,0 +1,209 @@
+<script>
+/* ==========================================================================
+   Game: Fortune Sticks (เซียมซี) — a red fortune-stick cup where every
+   stick's tip shows a player's name. The winner is chosen with
+   Math.random() up front (same honest pattern as every other picker
+   here); the animation is purely cosmetic: the cup shakes for a few
+   seconds, then the winning stick slides up and out of the bundle
+   while the others settle back down.
+
+   Gear settings: edit/add names, elimination mode (winner removed from
+   the next round), and a shake-delay control (how long the cup rattles
+   before a stick pops out). Defaults to 5 seconds, matching the
+   traditional เซียมซี shake.
+   ========================================================================== */
+(function registerFortuneSticks() {
+  const STICK_CAP = 20;
+  let shaking = false;
+  let shakeTimeout = null;
+  let tickInterval = null;
+  let eliminationOn = false;
+  let pickedList = [];
+  let shakeDurationSeconds = 5;
+  let unsubscribePlayers = null;
+
+  function pool() {
+    const all = PlayerStore.getAll();
+    pickedList = pickedList.filter(n => all.includes(n));
+    const picked = new Set(pickedList);
+    return all.filter(n => !picked.has(n));
+  }
+
+  function activePlayers() {
+    return eliminationOn ? pool() : PlayerStore.getAll();
+  }
+
+  function openGearSettings(container) {
+    GameSettingsUtil.openModal({
+      title: 'เซียมซี',
+      duration: {
+        label: '🕒 ตั้งเวลาหน่วงการเขย่า (วินาที)',
+        value: shakeDurationSeconds,
+        min: 1, max: 8, step: 0.5,
+        onChange: (v) => { shakeDurationSeconds = v; }
+      },
+      elimination: {
+        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        on: eliminationOn,
+        eliminatedList: pickedList,
+        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
+      }
+    });
+  }
+
+  /** Picks up to `cap` names to actually render as sticks, guaranteeing
+      `mustInclude` (the pre-chosen winner) is one of them when given. */
+  function visibleStickList(players, mustInclude, cap) {
+    if (players.length <= cap) return players.slice();
+    if (mustInclude) {
+      const others = Utils.fisherYates(players.filter(p => p !== mustInclude).slice());
+      return Utils.fisherYates([mustInclude, ...others.slice(0, cap - 1)]);
+    }
+    return Utils.fisherYates(players.slice()).slice(0, cap);
+  }
+
+  function renderSticksHtml(showable) {
+    const n = showable.length;
+    const spread = Math.min(78, 18 + n * 6);
+    return showable.map((name, i) => {
+      const t = n === 1 ? 0.5 : i / (n - 1);
+      const x = ((t - 0.5) * spread).toFixed(1);
+      const rot = ((t - 0.5) * 22).toFixed(1);
+      const delay = Utils.randomRange(0, 0.3).toFixed(2);
+      const label = name.length > 9 ? name.slice(0, 8) + '…' : name;
+      return `<div class="fortune-stick" data-name="${Utils.escapeHtml(name)}" style="--x:${x}px; --r:${rot}deg; --d:${delay}s; z-index:${i}">
+        <span class="stick-tip-label">${Utils.escapeHtml(label)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function buildStage(container) {
+    shaking = false;
+    let players = activePlayers();
+
+    if (eliminationOn && players.length === 1) {
+      pickedList.push(players[0]);
+      players = activePlayers();
+    }
+
+    if (eliminationOn && players.length === 0) {
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
+          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" id="fortuneResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+          </div>
+        </section>`;
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      container.querySelector('#fortuneResetElimBtn').addEventListener('click', () => { pickedList = []; buildStage(container); });
+      return;
+    }
+
+    const showable = visibleStickList(players, null, STICK_CAP);
+
+    container.innerHTML = `
+      <section class="glass game-stage">
+        <div class="stick-cup-scene" id="stickScene">
+          <div class="stick-sticks" id="stickSticks">${renderSticksHtml(showable)}</div>
+          <div class="stick-cup"></div>
+        </div>
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="fortuneDrawBtn">🥢 เขย่าเซียมซี</button>
+        </div>
+        <div id="fortuneResultActions" style="margin-top:10px"></div>
+      </section>`;
+
+    GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+    container.querySelector('#fortuneDrawBtn').addEventListener('click', () => run(container));
+  }
+
+  function mount(container) {
+    eliminationOn = false;
+    pickedList = [];
+    shakeDurationSeconds = 5;
+    buildStage(container);
+    if (unsubscribePlayers) unsubscribePlayers();
+    unsubscribePlayers = PlayerStore.onChange(() => {
+      if (!shaking) buildStage(container);
+    });
+  }
+
+  function run(container) {
+    if (shaking) return;
+    const players = activePlayers();
+    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+
+    const winner = players[Utils.randomIndex(players.length)];
+    const scene = container.querySelector('#stickScene');
+    const sticksWrap = container.querySelector('#stickSticks');
+    container.querySelector('#fortuneResultActions').innerHTML = '';
+
+    const showable = visibleStickList(players, winner, STICK_CAP);
+    sticksWrap.innerHTML = renderSticksHtml(showable);
+
+    if (!AnimationSetting.isEnabled()) {
+      finish(container, winner, sticksWrap);
+      return;
+    }
+
+    shaking = true;
+    scene.classList.add('cup-shaking');
+    tickInterval = setInterval(() => SoundManager.play('race'), 260);
+
+    shakeTimeout = setTimeout(() => {
+      clearInterval(tickInterval);
+      tickInterval = null;
+      scene.classList.remove('cup-shaking');
+
+      const sticks = Array.from(sticksWrap.querySelectorAll('.fortune-stick'));
+      const winnerStick = sticks.find(s => s.dataset.name === winner) || sticks[0];
+      sticks.forEach(s => { if (s !== winnerStick) { s.classList.add('settling'); s.style.opacity = '.4'; } });
+      winnerStick.classList.add('popping');
+      SoundManager.play('winner');
+
+      shakeTimeout = setTimeout(() => {
+        shaking = false;
+        finish(container, winner, sticksWrap, winnerStick);
+      }, 850);
+    }, shakeDurationSeconds * 1000);
+  }
+
+  function finish(container, winner, sticksWrap, winnerStickEl) {
+    if (eliminationOn) pickedList.push(winner);
+
+    let target = winnerStickEl;
+    if (!target) {
+      sticksWrap.innerHTML = renderSticksHtml([winner]);
+      target = sticksWrap.querySelector('.fortune-stick');
+      target.classList.add('popping');
+    }
+
+    WinnerFX.confettiBurst();
+    WinnerFX.shatterBurst(target.querySelector('.stick-tip-label'));
+
+    container.querySelector('#fortuneResultActions').innerHTML = `
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn" id="fortuneAgainBtn">🔁 Play Again</button>
+        <button class="btn secondary" id="fortuneShareBtn">📤 Share Result</button>
+      </div>`;
+    container.querySelector('#fortuneAgainBtn').addEventListener('click', () => buildStage(container));
+    container.querySelector('#fortuneShareBtn').addEventListener('click', () => ShareResult.open('เซียมซี', [winner]));
+  }
+
+  GameManager.register('fortune-sticks', {
+    title: 'เซียมซี',
+    tagline: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา',
+    mount,
+    unmount() {
+      shaking = false;
+      if (shakeTimeout) clearTimeout(shakeTimeout);
+      if (tickInterval) clearInterval(tickInterval);
+      shakeTimeout = null; tickInterval = null;
+      if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; }
+    }
+  });
+})();
+</script>

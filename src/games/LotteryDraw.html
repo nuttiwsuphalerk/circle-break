@@ -1,0 +1,211 @@
+<script>
+/* ==========================================================================
+   Game: Lottery Draw (จับฉลาก) — a clear jar full of paper name-slips.
+   The winner is chosen with Math.random() up front (same honest pattern
+   as every other picker here); the animation is purely cosmetic:
+   the jar shakes and the slips flutter, then a hand dips in, grabs one,
+   and lifts it out to reveal the winner.
+
+   Gear settings: edit/add names, elimination mode (winner removed from
+   the next round), and a shake-delay control (how long the jar rattles
+   before the hand reaches in).
+   ========================================================================== */
+(function registerLotteryDraw() {
+  const SLIP_CAP = 24;
+  let shaking = false;
+  let shakeTimeout = null;
+  let tickInterval = null;
+  let eliminationOn = false;
+  let pickedList = [];
+  let shakeDurationSeconds = 4;
+  let unsubscribePlayers = null;
+
+  function pool() {
+    const all = PlayerStore.getAll();
+    pickedList = pickedList.filter(n => all.includes(n));
+    const picked = new Set(pickedList);
+    return all.filter(n => !picked.has(n));
+  }
+
+  function activePlayers() {
+    return eliminationOn ? pool() : PlayerStore.getAll();
+  }
+
+  function openGearSettings(container) {
+    GameSettingsUtil.openModal({
+      title: 'จับฉลาก',
+      duration: {
+        label: '🕒 ตั้งเวลาหน่วงการเขย่าโหล (วินาที)',
+        value: shakeDurationSeconds,
+        min: 1, max: 8, step: 0.5,
+        onChange: (v) => { shakeDurationSeconds = v; }
+      },
+      elimination: {
+        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        on: eliminationOn,
+        eliminatedList: pickedList,
+        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
+      }
+    });
+  }
+
+  function slipStyleVars() {
+    const left = Utils.randomRange(6, 80).toFixed(1);
+    const top = Utils.randomRange(8, 74).toFixed(1);
+    const rot = Utils.randomRange(-18, 18).toFixed(1);
+    const jx = Utils.randomRange(-6, 6).toFixed(1);
+    const jy = Utils.randomRange(-9, 2).toFixed(1);
+    const delay = Utils.randomRange(0, 0.4).toFixed(2);
+    return `left:${left}%; top:${top}%; --r:${rot}deg; --jx:${jx}px; --jy:${jy}px; --d:${delay}s;`;
+  }
+
+  function renderSlipsHtml(players) {
+    const showable = players.length > SLIP_CAP ? players.slice(0, SLIP_CAP) : players;
+    return showable.map(name => {
+      const label = name.length > 10 ? name.slice(0, 9) + '…' : name;
+      return `<div class="paper-slip" style="${slipStyleVars()}">${Utils.escapeHtml(label)}</div>`;
+    }).join('');
+  }
+
+  function buildStage(container) {
+    shaking = false;
+    let players = activePlayers();
+
+    if (eliminationOn && players.length === 1) {
+      pickedList.push(players[0]);
+      players = activePlayers();
+    }
+
+    if (eliminationOn && players.length === 0) {
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
+          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" id="lotteryResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+          </div>
+        </section>`;
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      container.querySelector('#lotteryResetElimBtn').addEventListener('click', () => { pickedList = []; buildStage(container); });
+      return;
+    }
+
+    container.innerHTML = `
+      <section class="glass game-stage">
+        <div class="jar-scene" id="jarScene">
+          <div class="jar-hand" id="jarHand">🖐️</div>
+          <div class="jar-neck"></div>
+          <div class="jar-body" id="jarBody">
+            <div class="jar-slips" id="jarSlips">${renderSlipsHtml(players)}</div>
+            <div class="jar-shine"></div>
+          </div>
+        </div>
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="drawBtn">🎫 จับฉลาก</button>
+        </div>
+        <div id="lotteryResultActions" style="margin-top:10px"></div>
+      </section>`;
+
+    GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+    container.querySelector('#drawBtn').addEventListener('click', () => run(container));
+  }
+
+  function mount(container) {
+    eliminationOn = false;
+    pickedList = [];
+    shakeDurationSeconds = 4;
+    buildStage(container);
+    if (unsubscribePlayers) unsubscribePlayers();
+    unsubscribePlayers = PlayerStore.onChange(() => {
+      if (!shaking) buildStage(container);
+    });
+  }
+
+  function run(container) {
+    if (shaking) return;
+    const players = activePlayers();
+    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+
+    const winner = players[Utils.randomIndex(players.length)];
+    const jarScene = container.querySelector('#jarScene');
+    const jarSlips = container.querySelector('#jarSlips');
+    const jarHand = container.querySelector('#jarHand');
+    container.querySelector('#lotteryResultActions').innerHTML = '';
+    jarSlips.innerHTML = renderSlipsHtml(players);
+
+    if (!AnimationSetting.isEnabled()) {
+      finish(container, winner, jarScene, jarSlips);
+      return;
+    }
+
+    shaking = true;
+    jarScene.classList.add('jar-shaking');
+    tickInterval = setInterval(() => SoundManager.play('race'), 260);
+
+    shakeTimeout = setTimeout(() => {
+      clearInterval(tickInterval);
+      tickInterval = null;
+      jarScene.classList.remove('jar-shaking');
+      jarHand.classList.add('dip');
+
+      shakeTimeout = setTimeout(() => {
+        // The hand has reached the bottom — fade the decorative slips
+        // and reveal the drawn one in the center of the jar.
+        jarSlips.querySelectorAll('.paper-slip').forEach(s => { s.style.transition = 'opacity .25s'; s.style.opacity = '0'; });
+        const drawn = document.createElement('div');
+        drawn.className = 'paper-slip drawn-slip';
+        drawn.textContent = winner;
+        jarSlips.appendChild(drawn);
+        SoundManager.play('winner');
+
+        jarHand.classList.remove('dip');
+        jarHand.classList.add('lift');
+
+        shakeTimeout = setTimeout(() => {
+          shaking = false;
+          finish(container, winner, jarScene, jarSlips, drawn);
+        }, 900);
+      }, 1000);
+    }, shakeDurationSeconds * 1000);
+  }
+
+  function finish(container, winner, jarScene, jarSlips, existingDrawnEl) {
+    if (eliminationOn) pickedList.push(winner);
+
+    let drawn = existingDrawnEl;
+    if (!drawn) {
+      jarSlips.innerHTML = '';
+      drawn = document.createElement('div');
+      drawn.className = 'paper-slip drawn-slip';
+      drawn.textContent = winner;
+      jarSlips.appendChild(drawn);
+    }
+
+    WinnerFX.confettiBurst();
+    WinnerFX.shatterBurst(drawn);
+
+    container.querySelector('#lotteryResultActions').innerHTML = `
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn" id="lotteryAgainBtn">🔁 Play Again</button>
+        <button class="btn secondary" id="lotteryShareBtn">📤 Share Result</button>
+      </div>`;
+    container.querySelector('#lotteryAgainBtn').addEventListener('click', () => buildStage(container));
+    container.querySelector('#lotteryShareBtn').addEventListener('click', () => ShareResult.open('จับฉลาก', [winner]));
+  }
+
+  GameManager.register('lottery-draw', {
+    title: 'จับฉลาก',
+    tagline: 'เขย่าโหล แล้วหยิบชื่อผู้โชคดี',
+    mount,
+    unmount() {
+      shaking = false;
+      if (shakeTimeout) clearTimeout(shakeTimeout);
+      if (tickInterval) clearInterval(tickInterval);
+      shakeTimeout = null; tickInterval = null;
+      if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; }
+    }
+  });
+})();
+</script>

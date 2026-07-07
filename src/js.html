@@ -550,6 +550,8 @@ const App = (() => {
       { emoji: '🎲', label: 'Name Picker', desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', onClick: () => openSubmenu([
           { emoji: '🎡', label: 'Spin Wheel', desc: 'หมุนวงล้อหาผู้ชนะ', onClick: () => openGame('spin-wheel') },
           { emoji: '🎯', label: 'Random Picker', desc: 'สุ่มชื่อวิ่งไว ๆ', onClick: () => openGame('random-picker') },
+          { emoji: '🎫', label: 'จับฉลาก', desc: 'เขย่าโหล หยิบชื่อจากในขวด', onClick: () => openGame('lottery-draw') },
+          { emoji: '🥢', label: 'เซียมซี', desc: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา', onClick: () => openGame('fortune-sticks') },
         ], 'Name Picker', 'เลือกวิธีสุ่มที่ชอบ') },
       { emoji: '🏁', label: 'Race Games', desc: 'แข่งวิ่งลุ้นเส้นชัย', onClick: () => openSubmenu([
           { emoji: '🏃', label: 'Running Race', desc: 'วิ่งแข่งกันดิบ ๆ', onClick: () => openGame('running-race') },

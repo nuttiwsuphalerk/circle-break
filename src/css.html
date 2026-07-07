@@ -333,6 +333,123 @@
     margin:16px 0; min-height:1.4em; display:flex; align-items:center; justify-content:center;
   }
 
+  /* ---------- Lottery Draw (จับฉลาก) ---------- */
+  .jar-scene{ position:relative; width:min(260px,72vw); height:280px; margin:18px auto 8px; }
+  .jar-hand{
+    position:absolute; top:-6px; left:50%; font-size:3rem; z-index:6;
+    transform:translateX(-50%) translateY(-70px) rotate(0deg); opacity:0;
+    filter:drop-shadow(0 6px 8px rgba(0,0,0,.4));
+  }
+  .jar-hand.dip{ animation: hand-dip 1s var(--ease-out-back) forwards; }
+  .jar-hand.lift{ animation: hand-lift .9s var(--ease-out-back) forwards, hand-fade-out .35s ease-in .75s forwards; }
+  @keyframes hand-fade-out{ to{ opacity:0; } }
+  @keyframes hand-dip{
+    0%{ opacity:0; transform:translateX(-50%) translateY(-90px) rotate(-8deg); }
+    55%{ opacity:1; transform:translateX(-50%) translateY(70px) rotate(4deg); }
+    100%{ opacity:1; transform:translateX(-50%) translateY(96px) rotate(0deg); }
+  }
+  @keyframes hand-lift{
+    0%{ opacity:1; transform:translateX(-50%) translateY(96px) rotate(0deg); }
+    100%{ opacity:1; transform:translateX(-50%) translateY(-120px) rotate(-6deg); }
+  }
+  .jar-neck{
+    position:absolute; top:26px; left:50%; transform:translateX(-50%);
+    width:35%; height:26px; border-radius:10px 10px 0 0;
+    border:3px solid var(--mist-white-faint); border-bottom:none;
+    background:linear-gradient(180deg, rgba(241,238,251,.16), rgba(241,238,251,.05));
+  }
+  .jar-body{
+    position:absolute; inset:48px 6% 0 6%; border-radius:22px 22px 46px 46px;
+    border:3px solid var(--mist-white-faint);
+    background:linear-gradient(180deg, rgba(241,238,251,.10), rgba(241,238,251,.03));
+    box-shadow:inset 0 0 34px rgba(255,255,255,.08), 0 14px 30px rgba(0,0,0,.35);
+    overflow:hidden; transform-origin:50% 85%;
+  }
+  .jar-shine{
+    position:absolute; top:8%; left:12%; width:16%; height:70%; border-radius:40%;
+    background:linear-gradient(180deg, rgba(255,255,255,.28), transparent);
+    pointer-events:none;
+  }
+  .jar-scene.jar-shaking .jar-body{ animation: jar-wiggle .28s infinite; }
+  @keyframes jar-wiggle{
+    0%,100%{ transform:rotate(0deg) translateX(0); }
+    25%{ transform:rotate(-2.2deg) translateX(-3px); }
+    75%{ transform:rotate(2.2deg) translateX(3px); }
+  }
+  .paper-slip{
+    position:absolute; background:var(--mist-white); color:#241B47;
+    font-size:.6rem; font-weight:700; padding:3px 7px; border-radius:3px;
+    box-shadow:0 2px 5px rgba(0,0,0,.35); white-space:nowrap; max-width:76px;
+    overflow:hidden; text-overflow:ellipsis; transform:rotate(var(--r,0deg));
+  }
+  .jar-scene.jar-shaking .paper-slip{ animation: paper-jitter .45s ease-in-out infinite; animation-delay:var(--d,0s); }
+  @keyframes paper-jitter{
+    0%,100%{ transform: translate(0,0) rotate(var(--r,0deg)); }
+    50%{ transform: translate(var(--jx,4px), var(--jy,-5px)) rotate(calc(var(--r,0deg) + 12deg)); }
+  }
+  .paper-slip.drawn-slip{
+    left:50% !important; top:50% !important; transform:translate(-50%,-50%) scale(0);
+    max-width:180px; white-space:normal; font-size:1rem; padding:10px 16px;
+    border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.4); z-index:5;
+    animation: drawn-slip-reveal .5s var(--ease-out-back) .05s forwards;
+  }
+  @keyframes drawn-slip-reveal{ to{ transform:translate(-50%,-50%) scale(1); } }
+
+  /* ---------- Fortune Sticks (เซียมซี) ---------- */
+  .stick-cup-scene{ position:relative; width:min(260px,72vw); height:280px; margin:18px auto 8px; }
+  .stick-sticks{ position:absolute; inset:0; transform-origin:50% 100%; }
+  .stick-cup{
+    position:absolute; bottom:0; left:18%;
+    width:64%; height:118px; border-radius:14px 14px 34px 34px;
+    background:linear-gradient(180deg,#E24B3D,#9C241A);
+    border:2px solid #7A1B12; box-shadow:0 14px 26px rgba(0,0,0,.4), inset 0 -14px 20px rgba(0,0,0,.25);
+    z-index:2; transform-origin:50% 100%;
+  }
+  .stick-cup::before{
+    content:''; position:absolute; top:-6px; left:-4%; width:108%; height:14px;
+    border-radius:50%; background:linear-gradient(180deg,#F4715F,#C63524);
+    box-shadow:0 3px 6px rgba(0,0,0,.3);
+  }
+  .stick-cup-scene.cup-shaking .stick-cup,
+  .stick-cup-scene.cup-shaking .stick-sticks{ animation: jar-wiggle .28s infinite; }
+  .fortune-stick{
+    position:absolute; bottom:34px; left:50%; width:9px; height:150px;
+    background:linear-gradient(180deg,#F3D27A,#D9A93F); border-radius:4px 4px 2px 2px;
+    box-shadow:0 3px 6px rgba(0,0,0,.3); transform-origin:bottom center;
+    transform:translateX(-50%) translateX(var(--x,0px)) rotate(var(--r,0deg));
+    z-index:1;
+  }
+  .fortune-stick::after{
+    content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+    width:9px; height:16px; border-radius:2px; background:#C0392B;
+  }
+  .stick-tip-label{
+    position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+    font-size:.58rem; font-weight:700; background:var(--mist-white); color:#241B47;
+    padding:2px 6px; border-radius:3px; white-space:nowrap; max-width:64px;
+    overflow:hidden; text-overflow:ellipsis; box-shadow:0 2px 4px rgba(0,0,0,.3);
+  }
+  .stick-cup-scene.cup-shaking .fortune-stick{ animation: stick-jitter .3s ease-in-out infinite; animation-delay:var(--d,0s); }
+  @keyframes stick-jitter{
+    0%,100%{ transform:translateX(-50%) translateX(var(--x,0px)) translateY(0) rotate(var(--r,0deg)); }
+    50%{ transform:translateX(-50%) translateX(var(--x,0px)) translateY(-8px) rotate(calc(var(--r,0deg) + 4deg)); }
+  }
+  .fortune-stick.popping{
+    animation: stick-pop-out .85s var(--ease-out-back) forwards;
+    z-index:4;
+  }
+  @keyframes stick-pop-out{
+    0%{ transform:translateX(-50%) translateX(var(--x,0px)) translateY(0) rotate(var(--r,0deg)); }
+    65%{ transform:translateX(-50%) translateX(0) translateY(-108px) rotate(0deg) scale(1.06); }
+    100%{ transform:translateX(-50%) translateX(0) translateY(-124px) rotate(0deg) scale(1.16); }
+  }
+  .fortune-stick.popping .stick-tip-label{
+    font-size:.92rem; font-weight:800; padding:6px 14px; max-width:220px;
+    color:var(--ink-violet); background:var(--accent-gold); box-shadow:0 6px 14px rgba(0,0,0,.4);
+    transition: all .3s .5s;
+  }
+  .fortune-stick.settling{ transition: transform .4s var(--ease-smooth); }
+
   /* Race track */
   .race-track{
     position:relative; background:var(--surface-soft); border-radius:var(--radius-md);
