@@ -14,6 +14,8 @@
   let currentRotation = 0;
   let eliminationOn = false;
   let pickedList = []; // names already won & removed from the pool, in draw order
+  let spinDurationSeconds = 4.6;
+  let unsubscribePlayers = null;
 
   function pool() {
     const all = PlayerStore.getAll();
@@ -64,6 +66,12 @@
   function openGearSettings(container) {
     GameSettingsUtil.openModal({
       title: 'Spin Wheel',
+      duration: {
+        label: '🕒 ตั้งเวลาหน่วงการหมุน (วินาที)',
+        value: spinDurationSeconds,
+        min: 2, max: 12, step: 0.5,
+        onChange: (v) => { spinDurationSeconds = v; }
+      },
       elimination: {
         label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
         on: eliminationOn,
@@ -123,7 +131,16 @@
   function mount(container) {
     eliminationOn = false;
     pickedList = [];
+    spinDurationSeconds = 4.6;
     buildStage(container);
+    // The wheel's slices are baked into the SVG at buildStage() time, so
+    // adding/removing/renaming a player mid-game (via the gear ⚙ → edit
+    // names modal) needs to trigger a rebuild — otherwise the visible
+    // wheel goes stale while spin() silently starts using the new roster.
+    if (unsubscribePlayers) unsubscribePlayers();
+    unsubscribePlayers = PlayerStore.onChange(() => {
+      if (!spinning) buildStage(container);
+    });
   }
 
   function spin(container) {
@@ -142,7 +159,7 @@
     currentRotation = finalRotation;
 
     const svg = container.querySelector('#wheelSvg');
-    const duration = AnimationSetting.isEnabled() ? 4.6 : 0.05;
+    const duration = AnimationSetting.isEnabled() ? spinDurationSeconds : 0.05;
     svg.style.transition = `transform ${duration}s cubic-bezier(.12,.68,.18,1)`;
     svg.style.transform = `rotate(${finalRotation}deg)`;
 
@@ -175,7 +192,7 @@
     title: 'Spin Wheel',
     tagline: 'หมุนวงล้อ ใครจะเป็นผู้ถูกเลือก',
     mount,
-    unmount() { spinning = false; }
+    unmount() { spinning = false; if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
   });
 })();
 </script>

@@ -1,12 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
   <base target="_top">
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14102B">
+
+  <title>วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี</title>
+  <meta name="description" content="วงแตก (Circle Break) เว็บเกมปาร์ตี้ฟรี ไม่ต้องล็อกอิน: หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง (คน/เป็ด/รถ), และเกมงับปากจระเข้-ฉลาม เหมาะกับกิจกรรมกลุ่ม ปาร์ตี้ ห้องเรียน และออฟฟิศ ข้อมูลผู้เล่นเก็บในเครื่องคุณเท่านั้น ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์">
+  <meta name="keywords" content="วงแตก, สุ่มชื่อ, หมุนวงล้อ, spin wheel, random picker, เกมปาร์ตี้, เกมกลุ่ม, สุ่มผู้เล่น, เกมจับฉลาก, circle break">
+  <meta name="author" content="Nuttiw Suphalerk">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://circle-break.xyz/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://circle-break.xyz/">
+  <meta property="og:site_name" content="วงแตก (Circle Break)">
+  <meta property="og:locale" content="th_TH">
+  <meta property="og:title" content="วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี">
+  <meta property="og:description" content="หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง, และเกมงับปากจระเข้-ฉลาม เล่นฟรี ไม่ต้องล็อกอิน เหมาะกับปาร์ตี้ ห้องเรียน และกิจกรรมกลุ่ม">
+  <meta property="og:image" content="https://circle-break.xyz/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="วงแตก (Circle Break) — Party Mini Game">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี">
+  <meta name="twitter:description" content="หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง, และเกมงับปากจระเข้-ฉลาม เล่นฟรี ไม่ต้องล็อกอิน">
+  <meta name="twitter:image" content="https://circle-break.xyz/og-image.png">
+
+  <!-- Icons / PWA -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="alternate icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <?!= include('css') ?>
+
+  <!-- Structured data: helps search engines understand this is a free web app -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "วงแตก (Circle Break)",
+    "alternateName": "Circle Break",
+    "url": "https://circle-break.xyz/",
+    "description": "เว็บเกมปาร์ตี้ฟรี ไม่ต้องล็อกอิน: หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง, และเกมงับปากจระเข้-ฉลาม เหมาะกับกิจกรรมกลุ่ม ปาร์ตี้ ห้องเรียน และออฟฟิศ",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript. Requires HTML5.",
+    "inLanguage": "th",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "THB" },
+    "author": { "@type": "Person", "name": "Nuttiw Suphalerk" }
+  }
+  </script>
+
   <!--
     Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your real publisher ID
     (AdSense > Account > Settings > Account information) once approved.
@@ -33,7 +88,7 @@
       accidental clicks and stay within AdSense's placement policies.
       Replace data-ad-client / data-ad-slot with your real IDs.
     -->
-    <div class="ad-slot">
+    <!-- <div class="ad-slot">
       <span class="ad-slot-label">โฆษณา</span>
       <ins class="adsbygoogle"
            style="display:block"
@@ -41,17 +96,17 @@
            data-ad-slot="XXXXXXXXXX"
            data-ad-format="auto"
            data-full-width-responsive="true"></ins>
-    </div>
+    </div> -->
     <script>
       try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { /* blocked or not yet approved — fine to ignore */ }
     </script>
 
     <footer>
       <div>ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น</div>
-      <div class="credit">
+      <!-- <div class="credit">
         เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้ —
         <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">ดูวิธีที่ Google ใช้ข้อมูลโฆษณา</a>
-      </div>
+      </div> -->
       <div class="credit">จัดทำโดย Nuttiw Suphalerk</div>
     </footer>
   </div>

@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14102B">
+
+  <title>วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี</title>
+  <meta name="description" content="วงแตก (Circle Break) เว็บเกมปาร์ตี้ฟรี ไม่ต้องล็อกอิน: หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง (คน/เป็ด/รถ), และเกมงับปากจระเข้-ฉลาม เหมาะกับกิจกรรมกลุ่ม ปาร์ตี้ ห้องเรียน และออฟฟิศ ข้อมูลผู้เล่นเก็บในเครื่องคุณเท่านั้น ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์">
+  <meta name="keywords" content="วงแตก, สุ่มชื่อ, หมุนวงล้อ, spin wheel, random picker, เกมปาร์ตี้, เกมกลุ่ม, สุ่มผู้เล่น, เกมจับฉลาก, circle break">
+  <meta name="author" content="Nuttiw Suphalerk">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://circle-break.xyz/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://circle-break.xyz/">
+  <meta property="og:site_name" content="วงแตก (Circle Break)">
+  <meta property="og:locale" content="th_TH">
+  <meta property="og:title" content="วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี">
+  <meta property="og:description" content="หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง, และเกมงับปากจระเข้-ฉลาม เล่นฟรี ไม่ต้องล็อกอิน เหมาะกับปาร์ตี้ ห้องเรียน และกิจกรรมกลุ่ม">
+  <meta property="og:image" content="https://circle-break.xyz/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="วงแตก (Circle Break) — Party Mini Game">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี">
+  <meta name="twitter:description" content="หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง, และเกมงับปากจระเข้-ฉลาม เล่นฟรี ไม่ต้องล็อกอิน">
+  <meta name="twitter:image" content="https://circle-break.xyz/og-image.png">
+
+  <!-- Icons / PWA -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="alternate icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+  /* ==========================================================================
+     วงแตก (Circle Break) — Design Tokens
+     Concept: a night-time party circle where the ring "breaks" to reveal
+     one person. The breaking ring is the signature motif reused across
+     every game's winner/loser reveal moment.
+     ========================================================================== */
+  :root{
+    /* --- Color: Ink Violet / Party Plum / Coral Pop / Golden Confetti / Electric Teal / Mist White --- */
+    --ink-violet:      #14102B;
+    --party-plum:      #241B47;
+    --party-plum-soft: #2E2358;
+    --coral-pop:       #FF6B6B;
+    --coral-pop-dim:   #FF6B6B33;
+    --golden-confetti: #FFC857;
+    --electric-teal:   #4CD9C0;
+    --mist-white:      #F1EEFB;
+    --mist-white-dim:  #F1EEFB99;
+    --mist-white-faint:#F1EEFB1f;
+
+    /* Light mode overrides applied via [data-theme="light"] below */
+    --bg:            var(--ink-violet);
+    --surface:       var(--party-plum);
+    --surface-soft:  var(--party-plum-soft);
+    --text:          var(--mist-white);
+    --text-dim:      var(--mist-white-dim);
+    --border:        var(--mist-white-faint);
+    --accent:        var(--electric-teal);
+    --accent-warn:   var(--coral-pop);
+    --accent-gold:   var(--golden-confetti);
+
+    --radius-sm: 10px;
+    --radius-md: 18px;
+    --radius-lg: 28px;
+
+    --shadow-glass: 0 8px 32px rgba(0,0,0,0.35);
+    --ease-out-back: cubic-bezier(.2,1.4,.4,1);
+    --ease-smooth: cubic-bezier(.4,0,.2,1);
+
+    --font-display: 'Noto Sans Thai', sans-serif;
+    --font-body: 'Noto Sans Thai', sans-serif;
+  }
+
+  [data-theme="light"]{
+    --bg:            #F4F2FB;
+    --surface:       #FFFFFF;
+    --surface-soft:  #ECE8FA;
+    --text:          #1C1733;
+    --text-dim:      #1C173399;
+    --border:        #1C173318;
+    --shadow-glass:  0 8px 28px rgba(28,23,51,0.12);
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:18px; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: radial-gradient(circle at 15% -10%, var(--surface-soft) 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size:1rem;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    transition: background .4s var(--ease-smooth), color .4s var(--ease-smooth);
+    overflow-x:hidden;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  body.no-anim, body.no-anim *{ animation-duration:0.001s !important; transition-duration:0.001s !important; }
+
+  h1,h2,h3{ font-family:var(--font-display); margin:0; }
+  p{ margin:0; }
+  button{ font-family:var(--font-body); }
+  input, textarea, select{ font-family:var(--font-body); }
+
+  a, button{ -webkit-tap-highlight-color: transparent; }
+
+  :focus-visible{
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  .visually-hidden{
+    position:absolute; width:1px;height:1px;overflow:hidden;
+    clip:rect(0 0 0 0); white-space:nowrap;
+  }
+
+  /* ---------- App shell ---------- */
+  #app{ min-height:100%; display:flex; flex-direction:column; }
+
+  .app-header{
+    position:relative;
+    padding: 44px 20px 28px;
+    text-align:center;
+    overflow:hidden;
+  }
+
+  /* Signature element: the breaking ring behind the title */
+  .break-ring{
+    position:absolute; top:50%; left:50%;
+    width:340px; height:340px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    border: 3px solid var(--accent);
+    opacity:.18;
+    clip-path: polygon(0 0, 46% 0, 46% 100%, 0 100%, 0 0, 54% 0, 54% 0, 100% 0, 100% 100%, 54% 100%);
+    animation: ring-spin 40s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes ring-spin{ to{ transform:translate(-50%,-50%) rotate(360deg); } }
+
+  .app-header h1{
+    position:relative;
+    font-size:clamp(2.1rem, 6vw, 3rem);
+    font-weight:800;
+    letter-spacing:.02em;
+    background: linear-gradient(90deg, var(--mist-white), var(--electric-teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .app-header .eyebrow{
+    position:relative;
+    display:inline-block;
+    font-size:.78rem; letter-spacing:.22em;
+    color: var(--accent-gold);
+    margin-bottom:10px;
+    font-weight:600;
+  }
+  .app-header .tagline{
+    position:relative;
+    color:var(--text-dim); margin-top:6px; font-size:.95rem;
+  }
+
+  .back-btn{
+    position:absolute; top:20px; left:16px;
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text); padding:10px 18px; border-radius:999px;
+    cursor:pointer; font-size:1rem;
+    transition: transform .2s var(--ease-out-back), background .2s;
+  }
+  .back-btn:hover{ transform:translateX(-3px); background:var(--surface-soft); }
+
+  .icon-btn{
+    position:absolute; top:18px; right:16px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text); width:48px; height:48px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:1.4rem;
+    transition: transform .2s var(--ease-out-back);
+  }
+  .icon-btn:hover{ transform:rotate(20deg); }
+
+  .game-gear-btn{
+    position:absolute; top:14px; right:14px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text); width:42px; height:42px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:1.25rem; z-index:3;
+    transition: transform .2s var(--ease-out-back);
+  }
+  .game-gear-btn:hover{ transform:rotate(20deg); }
+
+  main{ flex:1; padding: 0 16px 60px; max-width:960px; margin:0 auto; width:100%; }
+
+  /* ---------- Glass card ---------- */
+  .glass{
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-glass);
+  }
+
+  /* ---------- Home menu ---------- */
+  .menu-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap:18px;
+    margin-top:12px;
+  }
+  .menu-card{
+    padding:28px 22px;
+    text-align:left;
+    cursor:pointer;
+    color:var(--text);
+    display:flex; flex-direction:column; gap:10px;
+    transition: transform .25s var(--ease-out-back), box-shadow .25s;
+    animation: card-in .5s var(--ease-out-back) backwards;
+  }
+  .menu-card:nth-child(1){ animation-delay:.02s; }
+  .menu-card:nth-child(2){ animation-delay:.08s; }
+  .menu-card:nth-child(3){ animation-delay:.14s; }
+  @keyframes card-in{ from{ opacity:0; transform:translateY(16px) scale(.98);} to{opacity:1; transform:none;} }
+
+  .menu-card:hover, .menu-card:focus-visible{
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    border-color: var(--accent);
+  }
+  .menu-card .emoji{ font-size:3.1rem; line-height:1; }
+  .menu-card .label{ font-size:1.4rem; font-weight:700; }
+  .menu-card .desc{ font-size:1rem; color:var(--text-dim); }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px 26px; border-radius:999px; border:none;
+    font-size:1.05rem; font-weight:700; cursor:pointer;
+    background:var(--accent); color:#0b1d1a;
+    transition: transform .18s var(--ease-out-back), filter .18s, box-shadow .18s;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .btn:hover{ transform:translateY(-2px) scale(1.02); filter:brightness(1.06); }
+  .btn:active{ transform:translateY(0) scale(.98); }
+  .btn.secondary{ background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:none; }
+  .btn.warn{ background:var(--accent-warn); color:#2a0b0b; box-shadow:0 6px 18px var(--coral-pop-dim); }
+  .btn.ghost{ background:transparent; color:var(--text-dim); box-shadow:none; padding:8px 14px; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+  .btn-row{ display:flex; flex-wrap:wrap; gap:10px; }
+
+  /* ---------- Section heading ---------- */
+  .section-title{
+    display:flex; align-items:center; gap:10px;
+    font-size:1.3rem; font-weight:800; margin: 26px 0 14px;
+  }
+  .section-title .eyebrow-tag{
+    font-size:.68rem; letter-spacing:.14em; color:var(--ink-violet);
+    background:var(--accent-gold); padding:3px 9px; border-radius:999px; font-weight:700;
+  }
+
+  /* ---------- Player Manager ---------- */
+  .player-panel{ padding:20px; margin-bottom:22px; }
+  .player-toolbar{ display:flex; flex-wrap:wrap; gap:10px; padding-top:14px; margin-bottom:14px; }
+  .player-input-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .player-input-row input{
+    flex:1; padding:14px 18px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface-soft); color:var(--text); font-size:1.05rem;
+  }
+  .player-count{ font-size:.9rem; color:var(--text-dim); margin-bottom:10px; }
+  .player-list{
+    display:flex; flex-wrap:wrap; gap:8px; list-style:none; padding:0; margin:0;
+    max-height:220px; overflow-y:auto;
+  }
+  .player-chip{
+    display:flex; align-items:center; gap:6px;
+    background:var(--surface-soft); border:1px solid var(--border);
+    padding:8px 9px 8px 15px; border-radius:999px; font-size:.98rem;
+    animation: chip-in .3s var(--ease-out-back) backwards;
+  }
+  @keyframes chip-in{ from{opacity:0; transform:scale(.7);} to{opacity:1; transform:none;} }
+  .player-chip button{
+    background:none; border:none; color:var(--text-dim); cursor:pointer;
+    width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+  }
+  .player-chip button:hover{ background:var(--coral-pop-dim); color:var(--coral-pop); }
+  .player-empty{ color:var(--text-dim); font-size:.95rem; padding:10px 2px; }
+
+  /* Modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(6,4,18,.55);
+    display:flex; align-items:center; justify-content:center; z-index:100;
+    padding:20px; animation: fade-in .2s;
+  }
+  @keyframes fade-in{ from{opacity:0;} to{opacity:1;} }
+  .modal{
+    width:100%; max-width:440px; padding:24px; animation: modal-in .3s var(--ease-out-back);
+  }
+  @keyframes modal-in{ from{opacity:0; transform:translateY(20px) scale(.96);} to{opacity:1; transform:none;} }
+  .modal h3{ margin-bottom:12px; }
+  .modal textarea{
+    width:100%; min-height:140px; padding:12px; border-radius:12px;
+    border:1px solid var(--border); background:var(--surface-soft); color:var(--text);
+    font-family:var(--font-body); resize:vertical; margin-bottom:8px;
+  }
+  .modal-hint{ font-size:.78rem; color:var(--text-dim); margin-bottom:14px; }
+  .field-error{ color:var(--coral-pop); font-size:.8rem; min-height:1.2em; margin-bottom:8px; }
+
+  /* ---------- Game card / stage ---------- */
+  .game-stage{ padding:24px; text-align:center; position:relative; }
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--surface); border:1px solid var(--border); color:var(--text);
+    padding:12px 20px; border-radius:999px; box-shadow:var(--shadow-glass);
+    font-size:.88rem; z-index:200; animation: toast-in .3s var(--ease-out-back);
+  }
+  @keyframes toast-in{ from{opacity:0; transform:translate(-50%,10px);} to{opacity:1; transform:translate(-50%,0);} }
+
+  /* Winner reveal shatter (breaking ring payoff) */
+  .shatter-wrap{ position:relative; display:inline-block; }
+  .shard{
+    position:absolute; width:8px; height:8px; top:50%; left:50%;
+    background:var(--accent-gold); border-radius:2px; opacity:0;
+  }
+  .shatter-play .shard{ animation: shard-fly .9s var(--ease-out-back) forwards; }
+  @keyframes shard-fly{
+    0%{ opacity:1; transform:translate(-50%,-50%) rotate(0) scale(1); }
+    100%{ opacity:0; transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.3); }
+  }
+
+  .winner-name{
+    font-size:2.6rem; font-weight:800; margin:14px 0;
+    color:var(--accent-gold);
+    animation: winner-pop .5s var(--ease-out-back);
+  }
+  @keyframes winner-pop{ from{ transform:scale(.5); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+  /* Spin wheel */
+  .wheel-wrap{
+    position:relative; width:min(360px,86vw); height:min(360px,86vw); margin:26px auto;
+    border-radius:50%;
+    box-shadow: 0 0 0 6px var(--surface), 0 0 0 11px var(--accent-gold), 0 20px 45px rgba(0,0,0,.45);
+  }
+  .wheel-wrap svg{
+    width:100%; height:100%; transition: transform 5s var(--ease-smooth);
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,.25));
+  }
+  .wheel-pointer{
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:16px solid transparent; border-right:16px solid transparent;
+    border-top:26px solid var(--coral-pop); filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));
+    z-index:3;
+  }
+
+  /* Random picker */
+  .picker-display{
+    font-size:2.4rem; font-weight:800; padding:40px 20px;
+    border-radius:var(--radius-md); background:var(--surface-soft);
+    margin:16px 0; min-height:1.4em; display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Race track */
+  .race-track{
+    position:relative; background:var(--surface-soft); border-radius:var(--radius-md);
+    overflow:hidden; margin:16px 0; padding-top:22px;
+  }
+  .race-lane{
+    position:relative; height:52px; border-bottom:1px dashed var(--border);
+    display:flex; align-items:center;
+  }
+  .race-lane:last-child{ border-bottom:none; }
+  .race-lane .lane-name{
+    position:absolute; left:6px; font-size:.85rem; font-weight:700; color:var(--text); z-index:2;
+    background:color-mix(in srgb, var(--surface-soft) 88%, transparent); padding:2px 8px; border-radius:6px;
+  }
+  .race-lane .sprite{
+    position:absolute; font-size:1.9rem; left:0; transition:none;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  }
+  .finish-line{
+    position:absolute; right:8px; top:0; bottom:0; width:4px;
+    background: repeating-linear-gradient(45deg, var(--mist-white) 0 6px, var(--ink-violet) 6px 12px);
+  }
+  .race-event-badge{
+    position:absolute; font-size:.78rem; padding:2px 8px; border-radius:6px;
+    background:var(--accent-gold); color:var(--ink-violet); font-weight:800;
+    top:-16px; opacity:0; transition:opacity .2s; white-space:nowrap; z-index:3;
+  }
+
+  /* Crocodile / shark bite — animal head with an open mouth; each tooth
+     is an individual pickable fang, its root placed exactly on the rim
+     of the mouth ellipse and rotated to point inward (see BiteGame.html
+     for the geometry — this file only carries the visual styling). */
+  .bite-jaw{
+    position:relative; width:100%;
+    display:flex; flex-direction:column; align-items:center;
+    margin-bottom:6px;
+  }
+  .jaw-stage{
+    position:relative; width:min(360px,88vw); margin:4px auto 18px;
+  }
+  .jaw-head{
+    position:relative; width:100%; aspect-ratio:1.55; border-radius:48% 48% 44% 44% / 62% 62% 38% 38%;
+    box-shadow:0 18px 40px rgba(0,0,0,.5), inset 0 -14px 30px rgba(0,0,0,.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .jaw-head.theme-croc{ background: radial-gradient(circle at 32% 20%, #7ec158 0%, #3f7a34 55%, #234f1d 100%); }
+  .jaw-head.theme-shark{ background: radial-gradient(circle at 32% 20%, #cbd9e2 0%, #7c93a3 55%, #46596a 100%); }
+
+  .jaw-eye{
+    position:absolute; top:10px; width:24px; height:24px; border-radius:50%;
+    background:#f8f6ff; border:3px solid rgba(0,0,0,.3);
+    display:flex; align-items:center; justify-content:center; z-index:2;
+    box-shadow:0 3px 6px rgba(0,0,0,.3);
+    transition: background .2s, border-color .2s;
+  }
+  .jaw-eye::after{ content:''; width:10px; height:10px; border-radius:50%; background:#14102B; transition:background .2s; }
+  .jaw-eye.left{ left:20%; } .jaw-eye.right{ right:20%; }
+
+  .jaw-eyebrow{
+    position:absolute; top:1px; width:26px; height:6px; border-radius:3px;
+    background:#1a1108; z-index:3; opacity:0; transition:opacity .12s;
+  }
+  .jaw-eyebrow.left{ left:16%; transform:rotate(20deg); }
+  .jaw-eyebrow.right{ right:16%; transform:rotate(-20deg); }
+
+  .jaw-head.angry .jaw-eyebrow{ opacity:1; }
+  .jaw-head.angry .jaw-eye{ background:#ffd7d7; border-color:#7a0e0e; }
+  .jaw-head.angry .jaw-eye::after{ background:#7a0e0e; }
+
+  .jaw-nostril{
+    position:absolute; top:2px; width:9px; height:13px; border-radius:50%;
+    background:#1f3a19; z-index:2;
+  }
+  .jaw-nostril.left{ left:45%; } .jaw-nostril.right{ right:45%; }
+
+  .shark-fin{
+    position:absolute; top:-34px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent;
+    border-bottom:42px solid #7c93a3; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4)); z-index:1;
+  }
+
+  .jaw-mouth{
+    position:relative; width:90%; height:62%; border-radius:50%;
+    background: radial-gradient(ellipse at center, #a3241f 0%, #5c0f0c 62%, #2a0605 100%);
+    box-shadow: inset 0 14px 30px rgba(0,0,0,.7), inset 0 -10px 20px rgba(0,0,0,.55);
+    overflow:visible;
+    transform-origin:center center;
+  }
+  .jaw-mouth.chomping{
+    animation: mouth-snap-shut .5s cubic-bezier(.65,0,.35,1) forwards;
+  }
+  @keyframes mouth-snap-shut{
+    0%{ transform:scaleY(1); }
+    30%{ transform:scaleY(.7); }
+    55%{ transform:scaleY(.12); }
+    70%{ transform:scaleY(.22); }
+    100%{ transform:scaleY(.12); }
+  }
+
+  .jaw-stage{ position:relative; }
+  .jaw-stage.flash::before{
+    content:''; position:absolute; inset:-16px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,70,70,.55) 0%, rgba(255,70,70,0) 70%);
+    animation: flash-pulse .45s ease-out forwards; pointer-events:none; z-index:6;
+  }
+  @keyframes flash-pulse{ from{ opacity:1; transform:scale(.75);} to{ opacity:0; transform:scale(1.25);} }
+
+  .teeth-arc{ position:absolute; inset:0; }
+
+  /* Fat, blunt-tipped teeth — a rounded peg shape (flat where it meets
+     the gum, gently domed at the tip) rather than a thin sharp spike,
+     for a bigger, easier-to-tap target. Rotation is applied inline per
+     tooth by JS to follow the mouth rim's curve using real ellipse
+     geometry (root sits exactly on the rim), so hover/transition here
+     only ever touches color/filter, never transform. */
+  .tooth{
+    position:absolute; width:8%; aspect-ratio:1.2;
+    background:linear-gradient(180deg,#fffdf8,#e6ddc8);
+    border:1px solid rgba(0,0,0,.3);
+    cursor:pointer;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
+    transition: filter .15s, background .15s;
+  }
+  .tooth.upper{ border-radius:0 0 50% 50% / 0 0 65% 65%; }
+  .tooth.lower{ border-radius:50% 50% 0 0 / 65% 65% 0 0; }
+  .tooth:hover:not(:disabled){ filter:brightness(1.15); }
+  .tooth:disabled{ cursor:not-allowed; }
+
+  /* Pressed-but-safe: an unmistakable color swap (not just a faint "X")
+     so it reads at a glance which teeth have already been tried. */
+  .tooth.pressed{
+    background:linear-gradient(180deg,#57606f,#2b323d);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.5);
+  }
+  /* Untouched teeth once the game has ended — dimmed so the eye goes
+     straight to the revealed bad tooth and the already-tried ones. */
+  .tooth.locked{ opacity:.28; }
+
+  .tooth.bad{
+    position:absolute; width:15%; aspect-ratio:1;
+    background:transparent; border:none; box-shadow:none;
+    font-size:2.1rem; display:flex; align-items:center; justify-content:center;
+    z-index:5; animation: bite-shake .4s; border-radius:0;
+  }
+  .jaw-head.chomp{ animation: chomp-shake .55s var(--ease-out-back); }
+  @keyframes chomp-shake{
+    0%{ transform:translate(0,0) rotate(0) scale(1); }
+    12%{ transform:translate(-4px,4px) rotate(-3deg) scale(1.05); }
+    24%{ transform:translate(8px,-6px) rotate(4deg) scale(1.08); }
+    38%{ transform:translate(-9px,3px) rotate(-4deg) scale(1.04); }
+    52%{ transform:translate(7px,-3px) rotate(3deg) scale(1.02); }
+    66%{ transform:translate(-5px,2px) rotate(-2deg) scale(1.01); }
+    80%{ transform:translate(3px,-1px) rotate(1deg) scale(1); }
+    100%{ transform:translate(0,0) rotate(0) scale(1); }
+  }
+  @keyframes bite-shake{
+    0%,100%{ transform:translate(-50%,-50%); } 25%{transform:translate(calc(-50% - 6px),-50%);} 75%{transform:translate(calc(-50% + 6px),-50%);}
+  }
+  .turn-banner{
+    font-size:1.15rem; font-weight:700; margin:0 0 14px; color:var(--accent);
+  }
+
+  /* Settings */
+  .settings-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 4px; border-bottom:1px solid var(--border);
+  }
+  .settings-row:last-child{ border-bottom:none; }
+  .switch{
+    position:relative; width:46px; height:26px; border-radius:999px;
+    background:var(--surface-soft); border:1px solid var(--border); cursor:pointer; flex-shrink:0;
+  }
+  .switch::after{
+    content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    background:var(--text-dim); transition: transform .25s var(--ease-out-back), background .25s;
+  }
+  .switch.on{ background: color-mix(in srgb, var(--accent) 35%, var(--surface-soft)); }
+  .switch.on::after{ transform:translateX(20px); background:var(--accent); }
+
+  /* Share modal */
+  .share-preview{
+    background:var(--surface-soft); border-radius:14px; padding:18px; text-align:left;
+    font-size:.9rem; white-space:pre-wrap; margin-bottom:14px; max-height:220px; overflow:auto;
+  }
+  canvas.share-canvas{ display:none; }
+
+  /* Confetti burst — used on any "winner!" moment */
+  .confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:150; overflow:hidden; }
+  .confetti-piece{
+    position:absolute; top:-12px; width:8px; height:14px; opacity:.95;
+    animation: confetti-fall linear forwards;
+  }
+  @keyframes confetti-fall{
+    to{ transform: translateY(110vh) rotate(720deg); opacity:0; }
+  }
+
+  /* Elimination / "picked out" list shown inside a game */
+  .eliminated-panel{
+    text-align:left; background:var(--surface-soft); border-radius:14px;
+    padding:12px 16px; margin:14px 0; font-size:.92rem;
+  }
+  .eliminated-panel .eliminated-title{
+    font-weight:700; color:var(--text-dim); font-size:.8rem;
+    letter-spacing:.08em; margin-bottom:8px;
+  }
+  .eliminated-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .eliminated-chip{
+    background:var(--surface); border:1px solid var(--border);
+    padding:4px 10px; border-radius:999px; font-size:.85rem; color:var(--text-dim);
+  }
+  .eliminated-chip .rank{ color:var(--accent-gold); font-weight:700; margin-right:4px; }
+
+  /* Timer control (Random Picker / Bite games) */
+  .timer-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--surface-soft); border:1px solid var(--border);
+    padding:6px 14px; border-radius:999px; font-size:.92rem; margin-bottom:12px;
+    color:var(--accent-gold); font-weight:700;
+  }
+  .timer-seconds-input{
+    width:64px; padding:8px 10px; border-radius:10px; border:1px solid var(--border);
+    background:var(--surface-soft); color:var(--text); font-size:1rem; text-align:center;
+  }
+  .settings-subrow{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:6px 0;
+  }
+
+  /* Contact / report issue */
+  .contact-box{
+    background:var(--surface-soft); border-radius:14px; padding:16px; margin-top:8px;
+    font-size:.92rem; color:var(--text-dim); text-align:left;
+  }
+  .contact-box a{ color:var(--accent); font-weight:700; text-decoration:none; }
+  .contact-box a:hover{ text-decoration:underline; }
+
+  /* Ad slot — deliberately isolated below all game content, never
+     adjacent to interactive controls (buttons, wheel, teeth, track). */
+  .ad-slot{
+    max-width:960px; margin:8px auto 0; padding:0 16px;
+    min-height:100px; display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .ad-slot-label{
+    font-size:.68rem; letter-spacing:.12em; color:var(--text-dim); opacity:.7;
+  }
+
+  footer{
+    text-align:center; padding:20px; font-size:.8rem; color:var(--text-dim);
+  }
+  footer .credit{ margin-top:4px; opacity:.75; }
+  footer .credit a{ color:var(--accent); text-decoration:none; }
+  footer .credit a:hover{ text-decoration:underline; }
+
+  @media (max-width:480px){
+    html{ font-size:17px; }
+    .app-header{ padding:32px 14px 20px; }
+    .break-ring{ width:220px; height:220px; }
+    main{ padding:0 12px 50px; }
+    .menu-card{ padding:22px 18px; }
+    .menu-card .emoji{ font-size:2.6rem; }
+    .menu-card .label{ font-size:1.2rem; }
+    .btn{ padding:13px 20px; font-size:1rem; }
+    .player-input-row input{ padding:12px 16px; font-size:1rem; }
+    .icon-btn, .back-btn{ top:12px; }
+    .modal{ padding:20px 18px; }
+    .winner-name{ font-size:2rem; }
+    .teeth-grid{ grid-template-columns:repeat(4,1fr); gap:8px; }
+  }
+
+  @media (max-width:360px){
+    html{ font-size:15.5px; }
+    .break-ring{ width:180px; height:180px; }
+  }
+</style>
+
+
+  <!-- Structured data: helps search engines understand this is a free web app -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "วงแตก (Circle Break)",
+    "alternateName": "Circle Break",
+    "url": "https://circle-break.xyz/",
+    "description": "เว็บเกมปาร์ตี้ฟรี ไม่ต้องล็อกอิน: หมุนวงล้อสุ่มชื่อ, Random Picker, เกมแข่งวิ่ง, และเกมงับปากจระเข้-ฉลาม เหมาะกับกิจกรรมกลุ่ม ปาร์ตี้ ห้องเรียน และออฟฟิศ",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript. Requires HTML5.",
+    "inLanguage": "th",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "THB" },
+    "author": { "@type": "Person", "name": "Nuttiw Suphalerk" }
+  }
+  </script>
+
+  <!--
+    Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your real publisher ID
+    (AdSense > Account > Settings > Account information) once approved.
+    Remove this whole <script> tag if you decide against ads later.
+  -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <button id="backBtn" class="back-btn" style="display:none" aria-label="กลับหน้าแรก">← กลับ</button>
+      <button id="settingsShortcut" class="icon-btn" aria-label="ตั้งค่า" title="ตั้งค่า">⚙</button>
+      <div class="break-ring" aria-hidden="true"></div>
+      <span class="eyebrow">PARTY MINI GAME</span>
+      <h1 id="headerTitle">วงแตก</h1>
+      <p class="tagline" id="headerTagline">สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง</p>
+    </header>
+
+    <main id="main"></main>
+
+    <!--
+      Single, non-intrusive ad slot — deliberately placed BELOW all game
+      content (never next to buttons/teeth/wheel controls) to avoid
+      accidental clicks and stay within AdSense's placement policies.
+      Replace data-ad-client / data-ad-slot with your real IDs.
+    -->
+    <!-- <div class="ad-slot">
+      <span class="ad-slot-label">โฆษณา</span>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="XXXXXXXXXX"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div> -->
+    <script>
+      try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { /* blocked or not yet approved — fine to ignore */ }
+    </script>
+
+    <footer>
+      <div>ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น</div>
+      <!-- <div class="credit">
+        เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้ —
+        <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">ดูวิธีที่ Google ใช้ข้อมูลโฆษณา</a>
+      </div> -->
+      <div class="credit">จัดทำโดย Nuttiw Suphalerk</div>
+    </footer>
+  </div>
+
+  <!-- Shared player roster panel markup, hydrated by PlayerManager.init() -->
+  <template id="playerPanelTpl">
+    <section class="glass player-panel" aria-label="รายชื่อผู้เล่น">
+      <div class="section-title" style="margin-top:0">
+        <span class="eyebrow-tag">Players</span>
+        <span id="playerCountLabel" class="player-count" style="margin:0"></span>
+      </div>
+      <div class="player-input-row">
+        <label class="visually-hidden" for="playerNameInput">เพิ่มชื่อผู้เล่น</label>
+        <input id="playerNameInput" type="text" placeholder="พิมพ์ชื่อแล้วกด Enter…" maxlength="24" autocomplete="off">
+        <button id="playerAddBtn" class="btn">+ เพิ่ม</button>
+      </div>
+      <div class="field-error" id="playerFieldError"></div>
+      <ul class="player-list" id="playerList"></ul>
+      <div class="player-toolbar">
+        <button id="playerShuffleBtn" class="btn secondary">🔀 Shuffle</button>
+        <button id="playerImportBtn" class="btn secondary">📥 Import</button>
+        <button id="playerClearBtn" class="btn ghost">🗑 Clear all</button>
+      </div>
+    </section>
+  </template>
+
+  <script>
+/* ==========================================================================
+   PlayerManager — renders and wires up the shared "Players" panel.
+   Refactored to be instance-based: the home screen keeps one panel
+   mounted, and any game can pop open a second, independent instance in
+   a modal via PlayerManager.openModal() without the two ever colliding.
+   ========================================================================== */
+const PlayerManager = (() => {
+
+  function createInstance(root) {
+    function renderList() {
+      const listEl = root.querySelector('#playerList');
+      const players = PlayerStore.getAll();
+      const countLabel = root.querySelector('#playerCountLabel');
+      countLabel.textContent = `${players.length} / ${PlayerStore.MAX_PLAYERS} คน`;
+
+      listEl.innerHTML = '';
+      if (players.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'player-empty';
+        empty.textContent = 'ยังไม่มีผู้เล่น เพิ่มชื่ออย่างน้อย 2 คนเพื่อเริ่มเล่น';
+        listEl.appendChild(empty);
+        return;
+      }
+      players.forEach(name => {
+        const li = document.createElement('li');
+        li.className = 'player-chip';
+        const span = document.createElement('span');
+        span.textContent = name;
+        span.tabIndex = 0;
+        span.setAttribute('role', 'button');
+        span.setAttribute('aria-label', `แก้ไขชื่อ ${name}`);
+        span.addEventListener('click', () => startEdit(name));
+        span.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') startEdit(name); });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '✕';
+        removeBtn.setAttribute('aria-label', `ลบ ${name}`);
+        removeBtn.addEventListener('click', () => {
+          PlayerStore.remove(name);
+          SoundManager.play('click');
+        });
+
+        li.appendChild(span);
+        li.appendChild(removeBtn);
+        listEl.appendChild(li);
+      });
+    }
+
+    function startEdit(name) {
+      const newName = window.prompt('แก้ไขชื่อผู้เล่น', name);
+      if (newName === null) return;
+      const res = PlayerStore.edit(name, newName);
+      if (!res.ok) showToast(res.error);
+    }
+
+    function handleAdd() {
+      const input = root.querySelector('#playerNameInput');
+      const errEl = root.querySelector('#playerFieldError');
+      const res = PlayerStore.add(input.value);
+      if (res.ok) {
+        input.value = '';
+        errEl.textContent = '';
+        SoundManager.play('click');
+      } else {
+        errEl.textContent = res.error;
+      }
+      input.focus();
+    }
+
+    function openImportModal() {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop';
+      backdrop.innerHTML = `
+        <div class="modal glass" role="dialog" aria-modal="true" aria-label="นำเข้ารายชื่อผู้เล่น">
+          <h3>📥 Import รายชื่อ</h3>
+          <p class="modal-hint">วางชื่อทีละบรรทัด หรือคั่นด้วยจุลภาค (,) ระบบจะลบช่องว่างและชื่อซ้ำให้อัตโนมัติ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)<br><b>หมายเหตุ:</b> การนำเข้าจะแทนที่รายชื่อผู้เล่นปัจจุบันทั้งหมด</p>
+          <textarea id="importTextarea" placeholder="A\nB\nC\nD"></textarea>
+          <div class="field-error" id="importError"></div>
+          <div class="btn-row">
+            <button class="btn" id="importConfirmBtn">นำเข้า</button>
+            <button class="btn secondary" id="importCancelBtn">ยกเลิก</button>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
+      backdrop.querySelector('#importCancelBtn').addEventListener('click', () => backdrop.remove());
+      backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+      backdrop.querySelector('#importConfirmBtn').addEventListener('click', () => {
+        const text = backdrop.querySelector('#importTextarea').value;
+        const res = PlayerStore.importList(text);
+        if (!res.ok) {
+          backdrop.querySelector('#importError').textContent = res.error;
+          return;
+        }
+        SoundManager.play('click');
+        showToast(res.skipped > 0 ? `นำเข้า ${res.count} ชื่อ (ตัดชื่อซ้ำ ${res.skipped} ชื่อ)` : `นำเข้า ${res.count} ชื่อสำเร็จ`);
+        backdrop.remove();
+      });
+      backdrop.querySelector('#importTextarea').focus();
+    }
+
+    function confirmClear() {
+      if (PlayerStore.count() === 0) return;
+      if (window.confirm('ล้างรายชื่อผู้เล่นทั้งหมด?')) {
+        PlayerStore.clear();
+        SoundManager.play('click');
+      }
+    }
+
+    renderList();
+    const unsubscribe = PlayerStore.onChange(renderList);
+
+    root.querySelector('#playerAddBtn').addEventListener('click', handleAdd);
+    root.querySelector('#playerNameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleAdd();
+    });
+    root.querySelector('#playerShuffleBtn').addEventListener('click', () => {
+      if (PlayerStore.count() < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+      PlayerStore.shuffle();
+      SoundManager.play('click');
+      showToast('สลับลำดับผู้เล่นแล้ว');
+    });
+    root.querySelector('#playerImportBtn').addEventListener('click', openImportModal);
+    root.querySelector('#playerClearBtn').addEventListener('click', confirmClear);
+
+    return { destroy: unsubscribe };
+  }
+
+  function init(container) {
+    return createInstance(container);
+  }
+
+  /** Pops open a self-contained "edit players" modal, usable from any game. */
+  function openModal() {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    const modal = document.createElement('div');
+    modal.className = 'modal glass';
+    modal.style.maxWidth = '480px';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'แก้ไขผู้เล่น');
+    modal.innerHTML = `<h3>👥 แก้ไข / เพิ่มชื่อผู้เล่น</h3>`;
+
+    const panel = document.getElementById('playerPanelTpl').content.cloneNode(true);
+    modal.appendChild(panel);
+
+    const closeRow = document.createElement('div');
+    closeRow.className = 'btn-row';
+    closeRow.style.marginTop = '6px';
+    closeRow.innerHTML = `<button class="btn secondary" id="playerModalCloseBtn">ปิด</button>`;
+    modal.appendChild(closeRow);
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    const instance = createInstance(modal);
+
+    function close() {
+      instance.destroy();
+      backdrop.remove();
+    }
+    modal.querySelector('#playerModalCloseBtn').addEventListener('click', close);
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+  }
+
+  return { init, openModal };
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   ShareResult — one shared "share this result" modal used by every game.
+   Nothing here ever leaves the browser except via the user's own explicit
+   copy / download / share action — there is no server call involved.
+   ========================================================================== */
+const ShareResult = (() => {
+  /**
+   * @param {string} title - e.g. "Running Race", "Spin Wheel"
+   * @param {string[]} results - ordered list, winner first
+   */
+  function open(title, results) {
+    const text = ShareUtil.buildText(title, results);
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal glass" role="dialog" aria-modal="true" aria-label="แชร์ผลการแข่งขัน">
+        <h3>📤 Share Result</h3>
+        <div class="share-preview">${Utils.escapeHtml(text)}</div>
+        <div class="btn-row">
+          <button class="btn" id="shareCopyBtn">📋 Copy Text</button>
+          <button class="btn secondary" id="shareImageBtn">🖼 Generate Image</button>
+          <button class="btn ghost" id="shareCloseBtn">ปิด</button>
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+    backdrop.querySelector('#shareCloseBtn').addEventListener('click', () => backdrop.remove());
+
+    backdrop.querySelector('#shareCopyBtn').addEventListener('click', async () => {
+      const ok = await ShareUtil.copyText(text);
+      showToast(ok ? 'คัดลอกข้อความแล้ว ✅' : 'คัดลอกไม่สำเร็จ');
+    });
+
+    backdrop.querySelector('#shareImageBtn').addEventListener('click', async () => {
+      const canvas = ShareUtil.renderImage(title, results);
+      const shared = await ShareUtil.shareCanvas(canvas, text);
+      if (!shared) {
+        ShareUtil.downloadCanvas(canvas, 'circle-break-result.png');
+        showToast('บันทึกรูปภาพแล้ว ✅');
+      }
+    });
+  }
+
+  return { open };
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   GameSettingsUtil — the gear icon that appears inside every game's stage.
+   Every game wires up its own elimination/timer behavior, but they all
+   share this one modal shell so the UI stays consistent.
+   ========================================================================== */
+const GameSettingsUtil = (() => {
+  /** Appends a gear button into a game-stage section; returns the button. */
+  function attachGearButton(stageEl, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'game-gear-btn';
+    btn.setAttribute('aria-label', 'ตั้งค่าเกมนี้');
+    btn.title = 'ตั้งค่าเกมนี้';
+    btn.textContent = '⚙';
+    btn.addEventListener('click', onClick);
+    stageEl.appendChild(btn);
+    return btn;
+  }
+
+  /**
+   * @param {Object} cfg
+   *   title: string
+   *   elimination: null | { label, on, eliminatedList, onToggle(newVal) }
+   *   timer: null | { label, on, seconds, onToggle(newVal), onSeconds(newSeconds) }
+   *   duration: null | { label, value, min, max, step, onChange(newValue) }
+   */
+  function openModal(cfg) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    const modal = document.createElement('div');
+    modal.className = 'modal glass';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', `ตั้งค่า ${cfg.title}`);
+
+    let html = `<h3>⚙ ตั้งค่า · ${Utils.escapeHtml(cfg.title)}</h3>`;
+    html += `<div class="settings-row" style="padding-top:4px">
+      <span>👥 แก้ไข / เพิ่มชื่อผู้เล่น</span>
+      <button class="btn secondary" id="gsEditNamesBtn">แก้ไข</button>
+    </div>`;
+
+    if (cfg.duration) {
+      html += `<div class="settings-row">
+        <span>${cfg.duration.label}</span>
+        <input type="number" min="${cfg.duration.min}" max="${cfg.duration.max}" step="${cfg.duration.step || 0.5}" class="timer-seconds-input" id="gsDurationValue" value="${cfg.duration.value}">
+      </div>`;
+    }
+
+    if (cfg.elimination) {
+      html += `<div class="settings-row">
+        <span>${cfg.elimination.label}</span>
+        <div class="switch ${cfg.elimination.on ? 'on' : ''}" id="gsElimSwitch" role="switch" aria-checked="${cfg.elimination.on}" tabindex="0"></div>
+      </div>`;
+    }
+
+    if (cfg.timer) {
+      html += `<div class="settings-row">
+        <span>${cfg.timer.label}</span>
+        <div class="switch ${cfg.timer.on ? 'on' : ''}" id="gsTimerSwitch" role="switch" aria-checked="${cfg.timer.on}" tabindex="0"></div>
+      </div>
+      <div class="settings-subrow">
+        <span style="color:var(--text-dim); font-size:.88rem">เวลาต่อรอบ (วินาที)</span>
+        <input type="number" min="3" max="60" step="1" class="timer-seconds-input" id="gsTimerSeconds" value="${cfg.timer.seconds}">
+      </div>`;
+    }
+
+    if (cfg.elimination && cfg.elimination.eliminatedList && cfg.elimination.eliminatedList.length) {
+      html += `<div class="eliminated-panel">
+        <div class="eliminated-title">${cfg.elimination.eliminatedListLabel || 'รายชื่อที่คัดออกแล้ว'}</div>
+        <div class="eliminated-chips">${cfg.elimination.eliminatedList.map((n, i) => `<span class="eliminated-chip"><span class="rank">${i + 1}.</span>${Utils.escapeHtml(n)}</span>`).join('')}</div>
+      </div>`;
+    }
+
+    html += `<div class="btn-row" style="margin-top:12px"><button class="btn" id="gsCloseBtn">ปิด</button></div>`;
+    modal.innerHTML = html;
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    modal.querySelector('#gsEditNamesBtn').addEventListener('click', () => PlayerManager.openModal());
+    modal.querySelector('#gsCloseBtn').addEventListener('click', () => backdrop.remove());
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+
+    if (cfg.duration) {
+      const durInput = modal.querySelector('#gsDurationValue');
+      durInput.addEventListener('change', () => {
+        const v = Utils.clamp(parseFloat(durInput.value) || cfg.duration.value, cfg.duration.min, cfg.duration.max);
+        durInput.value = v;
+        cfg.duration.onChange(v);
+      });
+    }
+
+    if (cfg.elimination) {
+      const sw = modal.querySelector('#gsElimSwitch');
+      const toggle = () => {
+        const next = !sw.classList.contains('on');
+        sw.classList.toggle('on', next);
+        sw.setAttribute('aria-checked', String(next));
+        SoundManager.play('click');
+        cfg.elimination.onToggle(next);
+      };
+      sw.addEventListener('click', toggle);
+      sw.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    }
+
+    if (cfg.timer) {
+      const sw = modal.querySelector('#gsTimerSwitch');
+      const secInput = modal.querySelector('#gsTimerSeconds');
+      const toggle = () => {
+        const next = !sw.classList.contains('on');
+        sw.classList.toggle('on', next);
+        sw.setAttribute('aria-checked', String(next));
+        SoundManager.play('click');
+        cfg.timer.onToggle(next);
+      };
+      sw.addEventListener('click', toggle);
+      sw.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      secInput.addEventListener('change', () => {
+        const v = Utils.clamp(parseInt(secInput.value, 10) || cfg.timer.seconds, 3, 60);
+        secInput.value = v;
+        cfg.timer.onSeconds(v);
+      });
+    }
+  }
+
+  return { attachGearButton, openModal };
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   วงแตก (Circle Break) — Core Engine
+   No frameworks. No network calls. Everything lives in the browser.
+   Load order: this file first, then components/*, then games/*, then App.init().
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------
+   Storage — thin, defensive wrapper around window.localStorage.
+   Only ever touches the four keys the spec allows: players, sound,
+   dark mode, animation. Nothing else is ever written.
+   --------------------------------------------------------------------- */
+const Storage = (() => {
+  const PREFIX = 'cb_';
+  const KNOWN_KEYS = ['players', 'sound', 'darkMode', 'animation'];
+
+  function get(key, fallback) {
+    try {
+      const raw = window.localStorage.getItem(PREFIX + key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function set(key, value) {
+    try {
+      window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function resetAll() {
+    KNOWN_KEYS.forEach(k => window.localStorage.removeItem(PREFIX + k));
+  }
+
+  return { get, set, resetAll };
+})();
+
+/* ---------------------------------------------------------------------
+   Utils — shared pure helpers used by every game.
+   --------------------------------------------------------------------- */
+const Utils = (() => {
+  /** Fisher-Yates shuffle — unbiased, in place, returns the same array. */
+  function fisherYates(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /** Pick one random index fairly from a length. */
+  function randomIndex(length) {
+    return Math.floor(Math.random() * length);
+  }
+
+  /** Random float between min (inclusive) and max (exclusive). */
+  function randomRange(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function uid() {
+    return 'id-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  /** Simple ease-out cubic, used for spin-down animations. */
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  return { fisherYates, randomIndex, randomRange, uid, clamp, easeOutCubic, escapeHtml };
+})();
+
+/* ---------------------------------------------------------------------
+   PlayerStore — the single shared player roster every game reads from.
+   --------------------------------------------------------------------- */
+const PlayerStore = (() => {
+  const MIN_PLAYERS = 2;
+  const MAX_PLAYERS = 100;
+  let players = Storage.get('players', []);
+  const listeners = [];
+
+  function persist() {
+    Storage.set('players', players);
+    listeners.forEach(fn => fn(players.slice()));
+  }
+
+  function onChange(fn) {
+    listeners.push(fn);
+    return () => {
+      const idx = listeners.indexOf(fn);
+      if (idx !== -1) listeners.splice(idx, 1);
+    };
+  }
+
+  function getAll() {
+    return players.slice();
+  }
+
+  function count() {
+    return players.length;
+  }
+
+  function existsCaseInsensitive(name) {
+    const n = name.trim().toLowerCase();
+    return players.some(p => p.toLowerCase() === n);
+  }
+
+  function add(name) {
+    const trimmed = (name || '').trim();
+    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
+    if (players.length >= MAX_PLAYERS) return { ok: false, error: `เพิ่มได้สูงสุด ${MAX_PLAYERS} คน` };
+    if (existsCaseInsensitive(trimmed)) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    players.push(trimmed);
+    persist();
+    return { ok: true };
+  }
+
+  function remove(name) {
+    players = players.filter(p => p !== name);
+    persist();
+  }
+
+  function edit(oldName, newName) {
+    const trimmed = (newName || '').trim();
+    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
+    const dup = players.some(p => p !== oldName && p.toLowerCase() === trimmed.toLowerCase());
+    if (dup) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    const idx = players.indexOf(oldName);
+    if (idx === -1) return { ok: false, error: 'ไม่พบชื่อนี้' };
+    players[idx] = trimmed;
+    persist();
+    return { ok: true };
+  }
+
+  function clear() {
+    players = [];
+    persist();
+  }
+
+  function shuffle() {
+    Utils.fisherYates(players);
+    persist();
+    return players.slice();
+  }
+
+  /** Parses text separated by newlines and/or commas into unique names. */
+  function parseImportText(text) {
+    return (text || '')
+      .split(/[\n,]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  /** Replaces the whole roster with a deduped, capped import. */
+  function importList(text) {
+    const raw = parseImportText(text);
+    const seen = new Set();
+    const result = [];
+    for (const name of raw) {
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(name);
+      if (result.length >= MAX_PLAYERS) break;
+    }
+    if (result.length < MIN_PLAYERS) {
+      return { ok: false, error: `ต้องมีผู้เล่นอย่างน้อย ${MIN_PLAYERS} คน` };
+    }
+    players = result;
+    persist();
+    return { ok: true, count: result.length, skipped: raw.length - result.length };
+  }
+
+  function canStartGame() {
+    return players.length >= MIN_PLAYERS;
+  }
+
+  return {
+    MIN_PLAYERS, MAX_PLAYERS,
+    getAll, count, add, remove, edit, clear, shuffle,
+    importList, canStartGame, onChange
+  };
+})();
+
+/* ---------------------------------------------------------------------
+   SoundManager — tiny Web Audio synthesizer. No audio files are
+   downloaded from anywhere, so there is nothing to fetch and nothing
+   to track; every "sound" is generated locally with an oscillator.
+   --------------------------------------------------------------------- */
+const SoundManager = (() => {
+  let enabled = Storage.get('sound', true);
+  let ctx = null;
+
+  function ensureCtx() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ctx = new AC();
+    }
+    return ctx;
+  }
+
+  function tone(freq, duration, type = 'sine', gainPeak = 0.15, delay = 0) {
+    if (!enabled) return;
+    const c = ensureCtx();
+    if (!c) return;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    const startAt = c.currentTime + delay;
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(gainPeak, startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+    osc.connect(gain).connect(c.destination);
+    osc.start(startAt);
+    osc.stop(startAt + duration + 0.02);
+  }
+
+  const sounds = {
+    click: () => tone(520, 0.08, 'triangle', 0.12),
+    winner: () => { tone(660, 0.15, 'triangle'); tone(880, 0.2, 'triangle', 0.15, 0.12); tone(1100, 0.3, 'triangle', 0.15, 0.24); },
+    lose: () => { tone(220, 0.25, 'sawtooth', 0.12); tone(160, 0.35, 'sawtooth', 0.12, 0.15); },
+    countdown: () => tone(440, 0.1, 'square', 0.1),
+    race: () => tone(300, 0.05, 'square', 0.05)
+  };
+
+  function play(name) {
+    try { sounds[name] && sounds[name](); } catch (e) { /* audio not critical */ }
+  }
+
+  function isEnabled() { return enabled; }
+  function setEnabled(v) {
+    enabled = !!v;
+    Storage.set('sound', enabled);
+  }
+
+  return { play, isEnabled, setEnabled };
+})();
+
+/* ---------------------------------------------------------------------
+   AnimationSetting — global on/off switch respected by every game.
+   Games should check AnimationSetting.isEnabled() before doing long
+   animated sequences and jump straight to the result if it's off.
+   --------------------------------------------------------------------- */
+const AnimationSetting = (() => {
+  let enabled = Storage.get('animation', true);
+  function apply() {
+    document.body.classList.toggle('no-anim', !enabled);
+  }
+  function isEnabled() { return enabled; }
+  function setEnabled(v) {
+    enabled = !!v;
+    Storage.set('animation', enabled);
+    apply();
+  }
+  return { isEnabled, setEnabled, apply };
+})();
+
+/* ---------------------------------------------------------------------
+   ThemeSetting — dark mode is the default; toggling persists.
+   --------------------------------------------------------------------- */
+const ThemeSetting = (() => {
+  let dark = Storage.get('darkMode', true);
+  function apply() {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }
+  function isDark() { return dark; }
+  function setDark(v) {
+    dark = !!v;
+    Storage.set('darkMode', dark);
+    apply();
+  }
+  return { isDark, setDark, apply };
+})();
+
+/* ---------------------------------------------------------------------
+   GameManager — a tiny registry so new games can be added by just
+   dropping a new file in games/ and calling GameManager.register(),
+   without touching any core routing logic.
+   --------------------------------------------------------------------- */
+const GameManager = (() => {
+  const registry = new Map();
+
+  /**
+   * @param {string} id - unique route id, e.g. 'spin-wheel'
+   * @param {Object} def - { title, mount(container), unmount() }
+   */
+  function register(id, def) {
+    registry.set(id, def);
+  }
+
+  function get(id) {
+    return registry.get(id);
+  }
+
+  function list() {
+    return Array.from(registry.values());
+  }
+
+  return { register, get, list };
+})();
+
+/* ---------------------------------------------------------------------
+   ShareUtil — builds the shareable result text/image. Nothing here is
+   ever uploaded: copy-to-clipboard, canvas PNG download, or the native
+   Web Share API (still 100% client-side) are the only three paths out.
+   --------------------------------------------------------------------- */
+const ShareUtil = (() => {
+  const MEDALS = ['🥇', '🥈', '🥉'];
+
+  function buildText(title, results) {
+    const lines = [`🏁 ${title}`, ''];
+    results.forEach((r, i) => {
+      const medal = MEDALS[i] || `${i + 1}.`;
+      lines.push(`${medal} ${r}`);
+    });
+    return lines.join('\n');
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** Renders results onto a canvas and returns the canvas element. */
+  function renderImage(title, results) {
+    const canvas = document.createElement('canvas');
+    const W = 720, lineH = 64;
+    const H = 260 + results.length * lineH;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#14102B');
+    grad.addColorStop(1, '#2E2358');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#4CD9C0';
+    ctx.font = '600 22px "Noto Sans Thai", sans-serif';
+    ctx.fillText('วงแตก · Circle Break', W / 2, 56);
+
+    ctx.fillStyle = '#F1EEFB';
+    ctx.font = '800 34px "Noto Sans Thai", sans-serif';
+    ctx.fillText(`🏁 ${title}`, W / 2, 116);
+
+    results.forEach((r, i) => {
+      const y = 180 + i * lineH;
+      ctx.fillStyle = i === 0 ? '#FFC857' : '#F1EEFB';
+      ctx.font = (i === 0 ? '800 30px' : '600 26px') + ' "Noto Sans Thai", sans-serif';
+      const medal = MEDALS[i] || `${i + 1}.`;
+      ctx.fillText(`${medal}  ${r}`, W / 2, y);
+    });
+
+    return canvas;
+  }
+
+  function downloadCanvas(canvas, filename) {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  async function shareCanvas(canvas, text) {
+    if (!navigator.canShare) return false;
+    try {
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const file = new File([blob], 'circle-break-result.png', { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+        return true;
+      }
+    } catch (e) { /* user cancelled or unsupported */ }
+    return false;
+  }
+
+  return { buildText, copyText, renderImage, downloadCanvas, shareCanvas };
+})();
+
+/* ---------------------------------------------------------------------
+   WinnerFX — the shared "the circle breaks" payoff: a confetti rain
+   plus a burst of gold shards from the winner's name, echoing the
+   break-ring motif from the header. Every game calls this on reveal.
+   --------------------------------------------------------------------- */
+const WinnerFX = (() => {
+  const COLORS = ['#FF6B6B', '#FFC857', '#4CD9C0', '#F1EEFB'];
+
+  function confettiBurst(count = 46) {
+    if (!AnimationSetting.isEnabled()) return;
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    for (let i = 0; i < count; i++) {
+      const piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = COLORS[i % COLORS.length];
+      piece.style.animationDuration = (1.6 + Math.random() * 1.4) + 's';
+      piece.style.animationDelay = (Math.random() * 0.4) + 's';
+      piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+      layer.appendChild(piece);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 3200);
+  }
+
+  /** Bursts small gold shards outward from a target element (e.g. winner name). */
+  function shatterBurst(targetEl, count = 14) {
+    if (!targetEl || !AnimationSetting.isEnabled()) return;
+    targetEl.querySelectorAll('.shard').forEach(s => s.remove());
+    for (let i = 0; i < count; i++) {
+      const shard = document.createElement('span');
+      shard.className = 'shard';
+      const angle = Utils.randomRange(0, Math.PI * 2);
+      const dist = Utils.randomRange(60, 140);
+      shard.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+      shard.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+      shard.style.setProperty('--rot', `${Utils.randomRange(-180, 180)}deg`);
+      targetEl.appendChild(shard);
+    }
+    requestAnimationFrame(() => targetEl.classList.add('shatter-play'));
+    setTimeout(() => targetEl.classList.remove('shatter-play'), 1000);
+  }
+
+  return { confettiBurst, shatterBurst };
+})();
+
+/* ---------------------------------------------------------------------
+   Toast — small transient message, replaces alert().
+   --------------------------------------------------------------------- */
+function showToast(msg, duration = 2200) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+/** Renders the "already picked / eliminated" chip list used by elimination-mode games. */
+function eliminatedPanelHtml(list, label) {
+  if (!list || !list.length) return '';
+  const chips = list.map((n, i) => `<span class="eliminated-chip"><span class="rank">${i + 1}.</span>${Utils.escapeHtml(n)}</span>`).join('');
+  return `<div class="eliminated-panel"><div class="eliminated-title">${label}</div><div class="eliminated-chips">${chips}</div></div>`;
+}
+
+/* ---------------------------------------------------------------------
+   App — router / page shell controller.
+   --------------------------------------------------------------------- */
+const App = (() => {
+  const mainEl = () => document.getElementById('main');
+  const backBtn = () => document.getElementById('backBtn');
+  const headerTitle = () => document.getElementById('headerTitle');
+  const headerTagline = () => document.getElementById('headerTagline');
+  let currentGame = null;
+  let homePlayerInstance = null;
+
+  const HOME_TITLE = 'วงแตก';
+  const HOME_TAGLINE = 'สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง';
+
+  function destroyHomePlayerInstance() {
+    if (homePlayerInstance) { homePlayerInstance.destroy(); homePlayerInstance = null; }
+  }
+
+  function unmountCurrent() {
+    if (currentGame && currentGame.unmount) currentGame.unmount();
+    currentGame = null;
+  }
+
+  function goHome() {
+    unmountCurrent();
+    SoundManager.play('click');
+    renderHome();
+    backBtn().style.display = 'none';
+    headerTitle().textContent = HOME_TITLE;
+    headerTagline().textContent = HOME_TAGLINE;
+    window.scrollTo({ top: 0, behavior: AnimationSetting.isEnabled() ? 'smooth' : 'auto' });
+  }
+
+  function openGame(id) {
+    const game = GameManager.get(id);
+    if (!game) { showToast('ไม่พบเกมนี้'); return; }
+    if (game.requiresPlayers !== false && !PlayerStore.canStartGame()) {
+      showToast(`ต้องมีผู้เล่นอย่างน้อย ${PlayerStore.MIN_PLAYERS} คน`);
+      return;
+    }
+    unmountCurrent();
+    destroyHomePlayerInstance();
+    SoundManager.play('click');
+    mainEl().innerHTML = '';
+    headerTitle().textContent = game.title;
+    headerTagline().textContent = game.tagline || '';
+    backBtn().style.display = 'inline-flex';
+    currentGame = game;
+    game.mount(mainEl());
+    window.scrollTo({ top: 0, behavior: AnimationSetting.isEnabled() ? 'smooth' : 'auto' });
+  }
+
+  function openSubmenu(items, title, tagline) {
+    unmountCurrent();
+    destroyHomePlayerInstance();
+    backBtn().style.display = 'inline-flex';
+    headerTitle().textContent = title;
+    headerTagline().textContent = tagline || '';
+    const grid = document.createElement('div');
+    grid.className = 'menu-grid';
+    items.forEach(item => {
+      const card = document.createElement('button');
+      card.className = 'menu-card glass';
+      card.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${item.label}</span><span class="desc">${item.desc || ''}</span>`;
+      card.addEventListener('click', item.onClick);
+      grid.appendChild(card);
+    });
+    mainEl().innerHTML = '';
+    mainEl().appendChild(grid);
+  }
+
+  function renderHome() {
+    destroyHomePlayerInstance();
+    mainEl().innerHTML = '';
+    mainEl().appendChild(document.getElementById('playerPanelTpl').content.cloneNode(true));
+    homePlayerInstance = PlayerManager.init(mainEl());
+
+    const grid = document.createElement('div');
+    grid.className = 'menu-grid';
+
+    // Settings is reached via the gear icon in the header only (see index.html) —
+    // it isn't a menu card here, so the grid stays focused on the games.
+    const menuItems = [
+      { emoji: '🎲', label: 'Name Picker', desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', onClick: () => openSubmenu([
+          { emoji: '🎡', label: 'Spin Wheel', desc: 'หมุนวงล้อหาผู้ชนะ', onClick: () => openGame('spin-wheel') },
+          { emoji: '🎯', label: 'Random Picker', desc: 'สุ่มชื่อวิ่งไว ๆ', onClick: () => openGame('random-picker') },
+        ], 'Name Picker', 'เลือกวิธีสุ่มที่ชอบ') },
+      { emoji: '🏁', label: 'Race Games', desc: 'แข่งวิ่งลุ้นเส้นชัย', onClick: () => openSubmenu([
+          { emoji: '🏃', label: 'Running Race', desc: 'วิ่งแข่งกันดิบ ๆ', onClick: () => openGame('running-race') },
+          { emoji: '🦆', label: 'Duck Race', desc: 'เป็ดว่ายน้ำ ใครไวกว่า', onClick: () => openGame('duck-race') },
+          { emoji: '🚗', label: 'Car Race', desc: 'ซิ่งรถ nitro ลุ้นกันมัน', onClick: () => openGame('car-race') },
+        ], 'Race Games', 'ทุกเกมยุติธรรม ไม่มีใครได้เปรียบ') },
+      { emoji: '🐊', label: 'Survival Games', desc: 'ผลัดกันกด ใครซวยออกไป', onClick: () => openSubmenu([
+          { emoji: '🐊', label: 'Crocodile Bite', desc: 'งับใครไม่รู้ ลุ้นระทึก', onClick: () => openGame('crocodile-bite') },
+          { emoji: '🦈', label: 'Shark Bite', desc: 'ธีมฉลาม สนุกไม่แพ้กัน', onClick: () => openGame('shark-bite') },
+        ], 'Survival Games', 'ใครโดนงับ คนนั้นออก') },
+    ];
+
+    menuItems.forEach(item => {
+      const card = document.createElement('button');
+      card.className = 'menu-card glass';
+      card.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${item.label}</span><span class="desc">${item.desc}</span>`;
+      card.addEventListener('click', item.onClick);
+      grid.appendChild(card);
+    });
+
+    const heading = document.createElement('div');
+    heading.className = 'section-title';
+    heading.innerHTML = `<span class="eyebrow-tag">เลือกเกม</span>`;
+    mainEl().appendChild(heading);
+    mainEl().appendChild(grid);
+  }
+
+  function init() {
+    ThemeSetting.apply();
+    AnimationSetting.apply();
+    backBtn().addEventListener('click', goHome);
+    renderHome();
+  }
+
+  return { init, goHome, openGame, openSubmenu };
+})();
+
+window.addEventListener('DOMContentLoaded', () => {
+  App.init();
+});
+</script>
+
+  <script>
+/* ==========================================================================
+   Game: Spin Wheel — divides the wheel into one slice per player,
+   picks the winner with Math.random() FIRST, then animates the wheel
+   to land on that pre-chosen slice so the visual is always honest.
+
+   Elimination mode (optional, via the gear button): once a name wins,
+   it's removed from the pool for the next spin. The "eliminated" list
+   is derived from PlayerStore + an in-memory winners list, so adding,
+   editing, or removing players mid-session never gets out of sync.
+   ========================================================================== */
+(function registerSpinWheel() {
+  let spinning = false;
+  let currentRotation = 0;
+  let eliminationOn = false;
+  let pickedList = []; // names already won & removed from the pool, in draw order
+  let spinDurationSeconds = 4.6;
+  let unsubscribePlayers = null;
+
+  function pool() {
+    const all = PlayerStore.getAll();
+    pickedList = pickedList.filter(n => all.includes(n)); // prune deleted players
+    const picked = new Set(pickedList);
+    return all.filter(n => !picked.has(n));
+  }
+
+  function activePlayers() {
+    return eliminationOn ? pool() : PlayerStore.getAll();
+  }
+
+  function colorFor(i, n) {
+    const hue = (i * (360 / n) + 260) % 360;
+    return `hsl(${hue} 62% 54%)`;
+  }
+
+  function buildWheelSvg(players) {
+    const n = players.length;
+    const size = 360, r = size / 2, cx = r, cy = r;
+    const sliceAngle = 360 / n;
+    const showLabels = n <= 24;
+    let paths = '';
+    for (let i = 0; i < n; i++) {
+      const startA = (i * sliceAngle - 90) * Math.PI / 180;
+      const endA = ((i + 1) * sliceAngle - 90) * Math.PI / 180;
+      const x1 = cx + r * Math.cos(startA), y1 = cy + r * Math.sin(startA);
+      const x2 = cx + r * Math.cos(endA), y2 = cy + r * Math.sin(endA);
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+      paths += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${colorFor(i, n)}" stroke="#14102B" stroke-width="1.5"/>`;
+      if (showLabels) {
+        const midA = (i * sliceAngle + sliceAngle / 2 - 90) * Math.PI / 180;
+        const tx = cx + (r * 0.64) * Math.cos(midA);
+        const ty = cy + (r * 0.64) * Math.sin(midA);
+        const rotDeg = (i * sliceAngle + sliceAngle / 2);
+        const label = players[i].length > 10 ? players[i].slice(0, 9) + '…' : players[i];
+        const fontSize = n > 16 ? 13 : n > 8 ? 16 : 19;
+        paths += `<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" fill="#14102B" font-size="${fontSize}" font-weight="800" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#ffffff" stroke-width="2.5" stroke-opacity="0.28" transform="rotate(${rotDeg.toFixed(1)} ${tx.toFixed(2)} ${ty.toFixed(2)})">${Utils.escapeHtml(label)}</text>`;
+      }
+    }
+    const hubR = r * 0.13;
+    return `<svg viewBox="0 0 ${size} ${size}" id="wheelSvg">${paths}
+      <circle cx="${cx}" cy="${cy}" r="${hubR.toFixed(2)}" fill="#F1EEFB" stroke="#FFC857" stroke-width="4"/>
+      <circle cx="${(cx - hubR * 0.3).toFixed(2)}" cy="${(cy - hubR * 0.3).toFixed(2)}" r="${(hubR * 0.35).toFixed(2)}" fill="#ffffff" opacity="0.55"/>
+    </svg>`;
+  }
+
+  function openGearSettings(container) {
+    GameSettingsUtil.openModal({
+      title: 'Spin Wheel',
+      duration: {
+        label: '🕒 ตั้งเวลาหน่วงการหมุน (วินาที)',
+        value: spinDurationSeconds,
+        min: 2, max: 12, step: 0.5,
+        onChange: (v) => { spinDurationSeconds = v; }
+      },
+      elimination: {
+        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        on: eliminationOn,
+        eliminatedList: pickedList,
+        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        onToggle: (next) => {
+          eliminationOn = next;
+          if (next) pickedList = [];
+          buildStage(container);
+        }
+      }
+    });
+  }
+
+  function buildStage(container) {
+    spinning = false;
+    currentRotation = 0;
+    let players = activePlayers();
+
+    if (eliminationOn && players.length === 1) {
+      pickedList.push(players[0]); // sole survivor is automatically the last winner
+      players = activePlayers();
+    }
+
+    if (eliminationOn && players.length === 0) {
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
+          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" id="wheelResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+          </div>
+        </section>`;
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      container.querySelector('#wheelResetElimBtn').addEventListener('click', () => { pickedList = []; buildStage(container); });
+      return;
+    }
+
+    container.innerHTML = `
+      <section class="glass game-stage">
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          ${buildWheelSvg(players)}
+        </div>
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="spinBtn">🎡 หมุนวงล้อ</button>
+        </div>
+        <div id="wheelResult" style="margin-top:10px"></div>
+      </section>`;
+
+    const stage = container.querySelector('.game-stage');
+    GameSettingsUtil.attachGearButton(stage, () => openGearSettings(container));
+    container.querySelector('#spinBtn').addEventListener('click', () => spin(container));
+  }
+
+  function mount(container) {
+    eliminationOn = false;
+    pickedList = [];
+    spinDurationSeconds = 4.6;
+    buildStage(container);
+    // The wheel's slices are baked into the SVG at buildStage() time, so
+    // adding/removing/renaming a player mid-game (via the gear ⚙ → edit
+    // names modal) needs to trigger a rebuild — otherwise the visible
+    // wheel goes stale while spin() silently starts using the new roster.
+    if (unsubscribePlayers) unsubscribePlayers();
+    unsubscribePlayers = PlayerStore.onChange(() => {
+      if (!spinning) buildStage(container);
+    });
+  }
+
+  function spin(container) {
+    if (spinning) return;
+    const players = activePlayers();
+    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+    spinning = true;
+
+    const winnerIndex = Utils.randomIndex(players.length);
+    const n = players.length;
+    const sliceAngle = 360 / n;
+    const sliceCenter = winnerIndex * sliceAngle + sliceAngle / 2;
+    const spins = 5 + Math.floor(Math.random() * 6); // 5-10 full rotations
+    const targetWithinTurn = (360 - sliceCenter) % 360;
+    const finalRotation = currentRotation - (currentRotation % 360) + spins * 360 + targetWithinTurn;
+    currentRotation = finalRotation;
+
+    const svg = container.querySelector('#wheelSvg');
+    const duration = AnimationSetting.isEnabled() ? spinDurationSeconds : 0.05;
+    svg.style.transition = `transform ${duration}s cubic-bezier(.12,.68,.18,1)`;
+    svg.style.transform = `rotate(${finalRotation}deg)`;
+
+    const tickInterval = AnimationSetting.isEnabled() ? setInterval(() => SoundManager.play('countdown'), 260) : null;
+
+    setTimeout(() => {
+      if (tickInterval) clearInterval(tickInterval);
+      spinning = false;
+      SoundManager.play('winner');
+      const winnerName = players[winnerIndex];
+      if (eliminationOn) pickedList.push(winnerName);
+
+      const resultEl = container.querySelector('#wheelResult');
+      resultEl.innerHTML = `
+        <div class="shatter-wrap">
+          <div class="winner-name">🏆 ${Utils.escapeHtml(winnerName)}</div>
+        </div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="playAgainBtn">🔁 Play Again</button>
+          <button class="btn secondary" id="wheelShareBtn">📤 Share Result</button>
+        </div>`;
+      WinnerFX.confettiBurst();
+      WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
+      resultEl.querySelector('#playAgainBtn').addEventListener('click', () => buildStage(container));
+      resultEl.querySelector('#wheelShareBtn').addEventListener('click', () => ShareResult.open('Spin Wheel', [winnerName]));
+    }, duration * 1000 + 80);
+  }
+
+  GameManager.register('spin-wheel', {
+    title: 'Spin Wheel',
+    tagline: 'หมุนวงล้อ ใครจะเป็นผู้ถูกเลือก',
+    mount,
+    unmount() { spinning = false; if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
+  });
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   Game: Random Picker — a single-winner slot-style picker. The winner is
+   chosen with Math.random() up front; the animation just cycles through
+   names, slowing down via requestAnimationFrame until it lands there.
+
+   Gear settings: edit/add names, elimination mode (winner removed from
+   the next round), and a spin-delay control (how long the shuffle runs
+   before landing on the winner).
+   ========================================================================== */
+(function registerRandomPicker() {
+  let rafId = null;
+  let eliminationOn = false;
+  let pickedList = [];
+  let pickDurationSeconds = 2.6;
+  let unsubscribePlayers = null;
+
+  function pool() {
+    const all = PlayerStore.getAll();
+    pickedList = pickedList.filter(n => all.includes(n));
+    const picked = new Set(pickedList);
+    return all.filter(n => !picked.has(n));
+  }
+
+  function activePlayers() {
+    return eliminationOn ? pool() : PlayerStore.getAll();
+  }
+
+  function openGearSettings(container) {
+    GameSettingsUtil.openModal({
+      title: 'Random Picker',
+      duration: {
+        label: '🕒 ตั้งเวลาหน่วงการสุ่ม (วินาที)',
+        value: pickDurationSeconds,
+        min: 1, max: 8, step: 0.5,
+        onChange: (v) => { pickDurationSeconds = v; }
+      },
+      elimination: {
+        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        on: eliminationOn,
+        eliminatedList: pickedList,
+        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
+      }
+    });
+  }
+
+  function buildStage(container) {
+    let players = activePlayers();
+
+    if (eliminationOn && players.length === 1) {
+      pickedList.push(players[0]);
+      players = activePlayers();
+    }
+
+    if (eliminationOn && players.length === 0) {
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
+          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" id="pickerResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+          </div>
+        </section>`;
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      container.querySelector('#pickerResetElimBtn').addEventListener('click', () => { pickedList = []; buildStage(container); });
+      return;
+    }
+
+    container.innerHTML = `
+      <section class="glass game-stage">
+        <div class="picker-display" id="pickerDisplay">พร้อมสุ่ม!</div>
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="pickBtn">🎯 Random</button>
+        </div>
+        <div id="pickerResultActions" style="margin-top:10px"></div>
+      </section>`;
+
+    GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+    container.querySelector('#pickBtn').addEventListener('click', () => run(container));
+  }
+
+  function mount(container) {
+    eliminationOn = false;
+    pickedList = [];
+    pickDurationSeconds = 2.6;
+    buildStage(container);
+    // run() already re-queries the live roster at click time, but the
+    // elimination summary screen (and player-count feel of the stage)
+    // should still refresh if the roster changes while just sitting here.
+    if (unsubscribePlayers) unsubscribePlayers();
+    unsubscribePlayers = PlayerStore.onChange(() => {
+      if (!rafId) buildStage(container);
+    });
+  }
+
+  function run(container) {
+    if (rafId) return;
+    const players = activePlayers();
+    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+
+    const display = container.querySelector('#pickerDisplay');
+    container.querySelector('#pickerResultActions').innerHTML = '';
+    const winner = players[Utils.randomIndex(players.length)];
+
+    if (!AnimationSetting.isEnabled()) {
+      display.textContent = winner;
+      finish(container, winner);
+      return;
+    }
+
+    const totalDuration = pickDurationSeconds * 1000;
+    const start = performance.now();
+    let lastTickAt = 0;
+
+    function frame(now) {
+      const elapsed = now - start;
+      const t = Utils.clamp(elapsed / totalDuration, 0, 1);
+      const interval = 40 + Utils.easeOutCubic(t) * 340;
+      if (now - lastTickAt >= interval) {
+        lastTickAt = now;
+        if (t >= 1) {
+          display.textContent = winner;
+        } else {
+          display.textContent = players[Utils.randomIndex(players.length)];
+          SoundManager.play('race');
+        }
+      }
+      if (t < 1) {
+        rafId = requestAnimationFrame(frame);
+      } else {
+        rafId = null;
+        finish(container, winner);
+      }
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function finish(container, winner) {
+    SoundManager.play('winner');
+    if (eliminationOn) pickedList.push(winner);
+    WinnerFX.confettiBurst();
+    const display = container.querySelector('#pickerDisplay');
+    WinnerFX.shatterBurst(display);
+    container.querySelector('#pickerResultActions').innerHTML = `
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn" id="pickAgainBtn">🔁 Play Again</button>
+        <button class="btn secondary" id="pickShareBtn">📤 Share Result</button>
+      </div>`;
+    container.querySelector('#pickAgainBtn').addEventListener('click', () => buildStage(container));
+    container.querySelector('#pickShareBtn').addEventListener('click', () => ShareResult.open('Random Picker', [winner]));
+  }
+
+  GameManager.register('random-picker', {
+    title: 'Random Picker',
+    tagline: 'กดสุ่ม แล้วลุ้นว่าใครจะโดนเลือก',
+    mount,
+    unmount() { if (rafId) cancelAnimationFrame(rafId); rafId = null; if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
+  });
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   Game: Race Engine — one shared requestAnimationFrame loop that drives
+   Running Race, Duck Race and Car Race. Only the sprite emoji, lane
+   flavor text and named events change between themes; the movement and
+   fairness logic (everyone starts together, per-frame randomness is
+   identical in distribution for every racer) is identical for all three.
+
+   Elimination mode (gear button): the racer who finishes 1st is removed
+   from the pool before the next race, so repeated races crown a new
+   winner each time instead of the same person over and over.
+   Round time limit (gear button): sets the target pace for the whole
+   race — racers move slower for a longer limit, faster for a shorter
+   one — so the field genuinely finishes around the configured time,
+   with the limit itself still acting as a hard cutoff for any straggler
+   an unlucky event has slowed down too much.
+   ========================================================================== */
+(function registerRaceGames() {
+  const THEMES = {
+    'running-race': {
+      title: 'Running Race',
+      tagline: 'วิ่งแข่งกันดิบ ๆ ใครถึงเส้นชัยก่อน',
+      sprite: () => '🏃',
+      laneBg: '',
+      events: [
+        { label: 'Speed Boost', icon: '⚡', mult: 1.9, duration: 700 },
+        { label: 'Sprint', icon: '💨', mult: 1.6, duration: 900 },
+        { label: 'Dash', icon: '🌟', mult: 1.75, duration: 550 },
+        { label: 'Trip', icon: '💥', mult: 0.35, duration: 650 },
+        { label: 'Slip', icon: '🍌', mult: 0.4, duration: 600 },
+        { label: 'Slow', icon: '🐌', mult: 0.55, duration: 700 },
+      ]
+    },
+    'duck-race': {
+      title: 'Duck Race',
+      tagline: 'เป็ดว่ายน้ำ ตัวไหนจะไวที่สุด',
+      sprite: () => '🦆',
+      laneBg: 'linear-gradient(180deg, transparent 0%, rgba(76,217,192,.08) 100%)',
+      events: [
+        { label: 'Speed Boost', icon: '💦', mult: 1.8, duration: 700 },
+        { label: 'Sprint', icon: '🌊', mult: 1.55, duration: 800 },
+        { label: 'Splash', icon: '💥', mult: 0.4, duration: 600 },
+        { label: 'Slip', icon: '🫧', mult: 0.5, duration: 600 },
+        { label: 'Tangled Weeds', icon: '🌿', mult: 0.35, duration: 700 },
+      ]
+    },
+    'car-race': {
+      title: 'Car Race',
+      tagline: 'ซิ่งรถหลายสี ใครใช้ Nitro ไวกว่ากัน',
+      sprite: (i) => '🚗',
+      laneBg: 'repeating-linear-gradient(90deg, transparent 0 24px, rgba(241,238,251,.06) 24px 26px)',
+      events: [
+        { label: 'Nitro', icon: '🔥', mult: 2.0, duration: 650 },
+        { label: 'Turbo', icon: '⚡', mult: 1.7, duration: 750 },
+        { label: 'Drift', icon: '💨', mult: 1.3, duration: 500 },
+        { label: 'Engine Fail', icon: '🛠', mult: 0.3, duration: 800 },
+        { label: 'Random Speed', icon: '🎲', mult: () => Utils.randomRange(0.6, 1.6), duration: 500 },
+      ]
+    }
+  };
+
+  function buildGame(themeId) {
+    const theme = THEMES[themeId];
+    let rafId = null;
+    let running = false;
+    let eliminationOn = false;
+    let pickedList = []; // past winners, in win order
+    let timerOn = false;
+    let timerSeconds = 25;
+    let timerIntervalId = null;
+    let unsubscribePlayers = null;
+    const HUES = [0, 40, 80, 160, 200, 260, 300, 330];
+
+    function pool() {
+      const all = PlayerStore.getAll();
+      pickedList = pickedList.filter(n => all.includes(n));
+      const picked = new Set(pickedList);
+      return all.filter(n => !picked.has(n));
+    }
+
+    function activePlayers() {
+      return eliminationOn ? pool() : PlayerStore.getAll();
+    }
+
+    function clearTimerInterval() {
+      if (timerIntervalId) { clearInterval(timerIntervalId); timerIntervalId = null; }
+    }
+
+    function openGearSettings(container) {
+      GameSettingsUtil.openModal({
+        title: theme.title,
+        elimination: {
+          label: '🏅 คัดผู้ชนะออกจากรอบถัดไป',
+          on: eliminationOn,
+          eliminatedList: pickedList,
+          eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+          onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
+        },
+        timer: {
+          label: '⏱ จำกัดเวลาต่อรอบ (ตัดจบอัตโนมัติ)',
+          on: timerOn,
+          seconds: timerSeconds,
+          onToggle: (next) => { timerOn = next; buildStage(container); },
+          onSeconds: (v) => { timerSeconds = v; buildStage(container); }
+        }
+      });
+    }
+
+    function buildStage(container) {
+      running = false;
+      const players = activePlayers();
+
+      if (eliminationOn && players.length < 2) {
+        const doneMsg = players.length === 1
+          ? `🎉 เหลือคนเดียว: <b>${Utils.escapeHtml(players[0])}</b>`
+          : '🎉 คัดครบทุกคนแล้ว!';
+        container.innerHTML = `
+          <section class="glass game-stage">
+            <div class="winner-name">${doneMsg}</div>
+            ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+            <div class="btn-row" style="justify-content:center">
+              <button class="btn" id="raceResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            </div>
+          </section>`;
+        GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+        container.querySelector('#raceResetElimBtn').addEventListener('click', () => { pickedList = []; buildStage(container); });
+        return;
+      }
+
+      container.innerHTML = `
+        <section class="glass game-stage" style="text-align:left">
+          ${timerOn ? '<div class="timer-badge" id="raceTimerBadge" style="display:block; margin:0 auto 6px">⏱ ' + timerSeconds + 's</div>' : ''}
+          <div class="race-track" id="raceTrack">
+            ${players.map((name, i) => `
+              <div class="race-lane" style="background:${theme.laneBg}">
+                <span class="lane-name">${Utils.escapeHtml(name)}</span>
+                <span class="race-event-badge" id="badge-${i}"></span>
+                <span class="sprite" id="sprite-${i}" style="left:0%; filter:hue-rotate(${HUES[i % HUES.length]}deg)">${theme.sprite(i)}</span>
+              </div>`).join('')}
+            <div class="finish-line"></div>
+          </div>
+          ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" id="raceStartBtn">🏁 เริ่มการแข่งขัน</button>
+          </div>
+          <div id="raceResult" style="margin-top:10px; text-align:center"></div>
+        </section>`;
+
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      container.querySelector('#raceStartBtn').addEventListener('click', () => startCountdown(container, players));
+    }
+
+    function mount(container) {
+      eliminationOn = false;
+      pickedList = [];
+      timerOn = false;
+      clearTimerInterval();
+      buildStage(container);
+      // The lane list is built from the roster at buildStage() time, so
+      // a player added while everyone's just standing at the starting
+      // line (race not yet running) needs to trigger a rebuild too.
+      if (unsubscribePlayers) unsubscribePlayers();
+      unsubscribePlayers = PlayerStore.onChange(() => {
+        if (!running) buildStage(container);
+      });
+    }
+
+    function startCountdown(container, players) {
+      const btn = container.querySelector('#raceStartBtn');
+      btn.disabled = true;
+      let count = 3;
+      const track = container.querySelector('#raceTrack');
+      const overlay = document.createElement('div');
+      overlay.className = 'winner-name';
+      overlay.style.margin = '8px 0';
+      overlay.textContent = String(count);
+      track.parentNode.insertBefore(overlay, track);
+      SoundManager.play('countdown');
+      const timer = setInterval(() => {
+        count -= 1;
+        if (count > 0) {
+          overlay.textContent = String(count);
+          SoundManager.play('countdown');
+        } else {
+          overlay.textContent = 'ไป!';
+          SoundManager.play('race');
+          clearInterval(timer);
+          setTimeout(() => { overlay.remove(); runRace(container, players); }, 400);
+        }
+      }, AnimationSetting.isEnabled() ? 600 : 20);
+    }
+
+    function runRace(container, players) {
+      running = true;
+      const n = players.length;
+      const state = players.map(() => ({ pos: 0, mult: 1, effectUntil: 0, finished: false, finishOrder: null }));
+      let finishedCount = 0;
+      let lastTime = performance.now();
+      let lastTickSound = 0;
+      const raceStart = performance.now();
+      const timeLimitMs = timerOn ? timerSeconds * 1000 : Infinity;
+      // When a round time limit is set, the pace itself must target that
+      // duration — otherwise racers always cross the line in ~5s (their
+      // natural pace at the default speed) no matter what limit is set,
+      // and the "limit" never does anything but sit unused. 0.82 leaves
+      // headroom so most racers finish a bit before the hard cutoff,
+      // which still exists as a safety net for unlucky, event-slowed racers.
+      const DEFAULT_BASE_SPEED = 21; // ~4.8s to finish, used when no limit is set
+      const baseSpeed = timerOn ? Utils.clamp(100 / (timerSeconds * 0.82), 1.5, 60) : DEFAULT_BASE_SPEED;
+
+      clearTimerInterval();
+      if (timerOn) {
+        const badge = container.querySelector('#raceTimerBadge');
+        const updateBadge = () => {
+          const remain = Math.max(0, Math.ceil((timeLimitMs - (performance.now() - raceStart)) / 1000));
+          if (badge) badge.textContent = `⏱ ${remain}s`;
+        };
+        updateBadge();
+        timerIntervalId = setInterval(updateBadge, 500);
+      }
+
+      function forceFinishRemaining(now) {
+        const unfinished = [];
+        for (let i = 0; i < n; i++) if (!state[i].finished) unfinished.push(i);
+        // Whoever is furthest along when time runs out is ranked highest among the rest.
+        unfinished.sort((a, b) => state[b].pos - state[a].pos);
+        unfinished.forEach(i => {
+          state[i].finished = true;
+          finishedCount += 1;
+          state[i].finishOrder = finishedCount;
+        });
+      }
+
+      function frame(now) {
+        if (!running) return;
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+
+        for (let i = 0; i < n; i++) {
+          const s = state[i];
+          if (s.finished) continue;
+
+          if (now > s.effectUntil) { s.mult = 1; }
+
+          if (now > s.effectUntil && Math.random() < 0.01) {
+            const ev = theme.events[Utils.randomIndex(theme.events.length)];
+            const mult = typeof ev.mult === 'function' ? ev.mult() : ev.mult;
+            s.mult = mult;
+            s.effectUntil = now + ev.duration;
+            const badge = container.querySelector(`#badge-${i}`);
+            if (badge) {
+              badge.textContent = `${ev.icon} ${ev.label}`;
+              badge.style.left = '4px';
+              badge.style.opacity = '1';
+              setTimeout(() => { badge.style.opacity = '0'; }, ev.duration);
+            }
+          }
+
+          const jitter = Utils.randomRange(0.7, 1.3);
+          s.pos += baseSpeed * jitter * s.mult * dt;
+
+          if (s.pos >= 100 && !s.finished) {
+            s.pos = 100;
+            s.finished = true;
+            finishedCount += 1;
+            s.finishOrder = finishedCount;
+          }
+
+          const sprite = container.querySelector(`#sprite-${i}`);
+          if (sprite) sprite.style.left = (s.pos * 0.9).toFixed(2) + '%';
+        }
+
+        if (now - lastTickSound > 180) { lastTickSound = now; SoundManager.play('race'); }
+
+        if (finishedCount < n && (now - raceStart) >= timeLimitMs) {
+          forceFinishRemaining(now);
+        }
+
+        if (finishedCount >= n) {
+          running = false;
+          clearTimerInterval();
+          finishRace(container, players, state);
+          return;
+        }
+        rafId = requestAnimationFrame(frame);
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function finishRace(container, players, state) {
+      const ranked = players
+        .map((name, i) => ({ name, order: state[i].finishOrder }))
+        .sort((a, b) => a.order - b.order)
+        .map(r => r.name);
+
+      SoundManager.play('winner');
+      WinnerFX.confettiBurst();
+      if (eliminationOn) pickedList.push(ranked[0]);
+
+      const resultEl = container.querySelector('#raceResult');
+      const top3 = ranked.slice(0, 3);
+      const medals = ['🥇', '🥈', '🥉'];
+      resultEl.innerHTML = `
+        <div class="shatter-wrap"><div class="winner-name">🏆 ${Utils.escapeHtml(ranked[0])}</div></div>
+        <div style="margin:10px 0; color:var(--text-dim)">
+          ${top3.map((n, i) => `${medals[i]} ${Utils.escapeHtml(n)}`).join(' &nbsp; ')}
+        </div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="raceAgainBtn">🔁 Play Again</button>
+          <button class="btn secondary" id="raceShareBtn">📤 Share Result</button>
+        </div>`;
+      WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
+      resultEl.querySelector('#raceAgainBtn').addEventListener('click', () => buildStage(container));
+      resultEl.querySelector('#raceShareBtn').addEventListener('click', () => ShareResult.open(theme.title, ranked));
+    }
+
+    return {
+      title: theme.title,
+      tagline: theme.tagline,
+      mount,
+      unmount() { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = null; clearTimerInterval(); if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
+    };
+  }
+
+  Object.keys(THEMES).forEach(id => GameManager.register(id, buildGame(id)));
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   Game: Bite Game — Crocodile Bite and Shark Bite share the exact same
+   mechanic: one of 16 teeth is secretly the "bad" tooth, chosen fairly
+   with Math.random() before anyone plays, and players take turns
+   pressing teeth until someone presses the bad one.
+
+   Elimination mode (gear button): the loser sits out future rounds
+   until only one survivor remains. Timer (gear button): each turn gets
+   a countdown; if nobody presses in time, a random untouched tooth is
+   pressed automatically to keep the party moving.
+   ========================================================================== */
+(function registerBiteGames() {
+  const TEETH_COUNT = 16;
+  const ROW_COUNT = TEETH_COUNT / 2;
+  const THEMES = {
+    'crocodile-bite': { title: 'Crocodile Bite', tagline: 'ผลัดกันกด ระวังโดนงับ', emoji: '🐊', biteWord: 'งับ!', cls: 'croc' },
+    'shark-bite': { title: 'Shark Bite', tagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน', emoji: '🦈', biteWord: 'ฉลามงับ!', cls: 'shark' }
+  };
+
+  /** Places each tooth's ROOT exactly on the rim of the mouth ellipse
+      (the .jaw-mouth box, a true ellipse via border-radius:50%), then
+      rotates the tooth to point inward along that rim's local normal —
+      like real teeth radiating from the jawbone.
+
+      Points are spaced by equal ARC LENGTH along the rim, not equal
+      angle: this mouth is much wider than it is tall, so equal angle
+      steps bunch teeth together near the corners (where the ellipse
+      curves tightly) while spacing them too far apart near the top/
+      bottom (where it's nearly flat). Equal arc length keeps every
+      tooth's footprint genuinely clear of its neighbors — verified by
+      simulating the exact rotated bounding boxes, not just eyeballed. */
+  const MOUTH_SPREAD_DEG = 125; // total sweep per row, centered on top/bottom
+  const UPPER_CENTER_DEG = 270, LOWER_CENTER_DEG = 90;
+
+  /** Returns `count` angles (degrees) evenly spaced by arc length along
+      an ellipse of pixel size (mouthW x mouthH), between startDeg/endDeg. */
+  function evenArcAngles(mouthW, mouthH, startDeg, endDeg, count) {
+    const a = mouthW / 2, b = mouthH / 2;
+    const startRad = startDeg * Math.PI / 180, endRad = endDeg * Math.PI / 180;
+    const N = 400;
+    const thetas = [startRad];
+    const cum = [0];
+    for (let k = 1; k <= N; k++) {
+      const th = startRad + (endRad - startRad) * k / N;
+      const midTh = (thetas[k - 1] + th) / 2;
+      const speed = Math.sqrt(a * a * Math.sin(midTh) ** 2 + b * b * Math.cos(midTh) ** 2);
+      cum.push(cum[k - 1] + speed * (th - thetas[k - 1]));
+      thetas.push(th);
+    }
+    const total = cum[N];
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      const target = count === 1 ? total / 2 : total * i / (count - 1);
+      let lo = 0, hi = N;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < target) lo = mid + 1; else hi = mid; }
+      result.push(thetas[lo] * 180 / Math.PI);
+    }
+    return result;
+  }
+
+  /** Lays out one full set of tooth angles for a given rendered mouth
+      size. Call once per render (mouth pixel size only changes on
+      resize/re-render, so this doesn't need to run per-tooth). */
+  function layoutTeethAngles(mouthEl) {
+    const rect = mouthEl.getBoundingClientRect();
+    const mouthW = rect.width || 300, mouthH = rect.height || 180;
+    const half = MOUTH_SPREAD_DEG / 2;
+    const upper = evenArcAngles(mouthW, mouthH, UPPER_CENTER_DEG - half, UPPER_CENTER_DEG + half, ROW_COUNT);
+    const lower = evenArcAngles(mouthW, mouthH, LOWER_CENTER_DEG - half, LOWER_CENTER_DEG + half, ROW_COUNT);
+    return { upper, lower };
+  }
+
+  function positionTooth(el, i, angles) {
+    const isUpper = i < ROW_COUNT;
+    const idx = isUpper ? i : i - ROW_COUNT;
+    const deg = isUpper ? angles.upper[idx] : angles.lower[idx];
+    const rad = deg * Math.PI / 180;
+    const xPct = 50 + 50 * Math.cos(rad);
+    const yPct = 50 + 50 * Math.sin(rad);
+    const rot = deg - (isUpper ? UPPER_CENTER_DEG : LOWER_CENTER_DEG);
+    el.style.left = xPct.toFixed(2) + '%';
+    el.style.top = yPct.toFixed(2) + '%';
+    el.style.transform = `translate(-50%, ${isUpper ? '0%' : '-100%'}) rotate(${rot.toFixed(1)}deg)`;
+    el.classList.add(isUpper ? 'upper' : 'lower');
+  }
+
+  /** Applies the correct look for a tooth given the current game state:
+      untouched / already-pressed-safe (clearly recolored, no reliance on
+      a hard-to-see glyph) / the revealed bad tooth / locked-out at
+      game-over. Shared by the initial render and by handlePress so the
+      two paths can never drift out of sync. */
+  function applyToothVisual(btn, i, ctx) {
+    btn.classList.remove('pressed', 'bad', 'locked');
+    btn.disabled = false;
+    btn.textContent = '';
+    if (ctx.pressed[i]) {
+      btn.disabled = true;
+      if (i === ctx.badToothIndex && ctx.gameOver) {
+        btn.classList.remove('upper', 'lower');
+        btn.classList.add('bad');
+        btn.style.transform = 'translate(-50%,-50%) rotate(0deg)';
+        btn.textContent = ctx.emoji;
+      } else {
+        btn.classList.add('pressed');
+      }
+    } else if (ctx.gameOver) {
+      btn.disabled = true;
+      btn.classList.add('locked');
+    }
+  }
+
+  function buildGame(themeId) {
+    const theme = THEMES[themeId];
+    let badToothIndex = -1;
+    let turnIndex = 0;
+    let pressed = [];
+    let gameOver = false;
+    let playersRef = [];
+    let activeToken = 0;
+    let eliminationOn = false;
+    let outList = []; // losers so far, in the order they were eliminated
+    let timerOn = false;
+    let timerSeconds = 10;
+    let countdownId = null;
+    let unsubscribePlayers = null;
+
+    function survivors() {
+      const all = PlayerStore.getAll();
+      outList = outList.filter(n => all.includes(n)); // prune deleted players
+      const out = new Set(outList);
+      return all.filter(n => !out.has(n));
+    }
+
+    function rosterForRound() {
+      return eliminationOn ? survivors() : PlayerStore.getAll();
+    }
+
+    function clearCountdown() {
+      if (countdownId) { clearInterval(countdownId); countdownId = null; }
+    }
+
+    function startTurnCountdown(container) {
+      clearCountdown();
+      if (!timerOn || gameOver) return;
+      let remaining = timerSeconds;
+      const badge = container.querySelector('#biteTimerBadge');
+      if (badge) badge.textContent = `⏱ ${remaining}s`;
+      countdownId = setInterval(() => {
+        remaining -= 1;
+        const b = container.querySelector('#biteTimerBadge');
+        if (b) b.textContent = `⏱ ${Math.max(remaining, 0)}s`;
+        if (remaining <= 0) {
+          clearCountdown();
+          autoPress(container);
+        }
+      }, 1000);
+    }
+
+    function autoPress(container) {
+      const untouched = pressed.map((p, i) => p ? -1 : i).filter(i => i !== -1);
+      if (untouched.length === 0 || gameOver) return;
+      const i = untouched[Utils.randomIndex(untouched.length)];
+      handlePress(container, i);
+    }
+
+    function setup() {
+      activeToken++;
+      badToothIndex = Utils.randomIndex(TEETH_COUNT);
+      turnIndex = 0;
+      pressed = new Array(TEETH_COUNT).fill(false);
+      gameOver = false;
+      playersRef = Utils.fisherYates(rosterForRound().slice());
+    }
+
+    function openGearSettings(container) {
+      GameSettingsUtil.openModal({
+        title: theme.title,
+        elimination: {
+          label: '🏅 ตัดผู้แพ้ออกจากรอบถัดไป',
+          on: eliminationOn,
+          eliminatedList: outList,
+          eliminatedListLabel: 'รายชื่อที่ออกไปแล้ว',
+          onToggle: (next) => { eliminationOn = next; if (next) outList = []; render(container); }
+        },
+        timer: {
+          label: '⏱ ตั้งเวลาต่อตา',
+          on: timerOn,
+          seconds: timerSeconds,
+          onToggle: (next) => { timerOn = next; render(container); startTurnCountdown(container); },
+          onSeconds: (v) => { timerSeconds = v; render(container); startTurnCountdown(container); }
+        }
+      });
+    }
+
+    function mount(container) {
+      eliminationOn = false;
+      outList = [];
+      timerOn = false;
+      clearCountdown();
+      newRound(container);
+      // Turn order is shuffled once per round, so a player added mid-turn
+      // only joins the *next* round by design. But if nobody has pressed
+      // a tooth yet this round, it's still the "getting ready" moment —
+      // refresh so a newly-added player is included right away instead
+      // of silently waiting for the round after this one.
+      if (unsubscribePlayers) unsubscribePlayers();
+      unsubscribePlayers = PlayerStore.onChange(() => {
+        if (!gameOver && pressed.every(p => !p)) newRound(container);
+      });
+    }
+
+    function newRound(container) {
+      if (eliminationOn && survivors().length < 2) {
+        const msg = survivors().length === 1
+          ? `🏆 ผู้รอดชีวิตคนสุดท้าย: <b>${Utils.escapeHtml(survivors()[0])}</b>`
+          : '🎉 จบเกมแล้ว!';
+        container.innerHTML = `
+          <section class="glass game-stage">
+            <div class="winner-name">${msg}</div>
+            ${eliminatedPanelHtml(outList, 'ลำดับผู้ที่ออกไปแล้ว')}
+            <div class="btn-row" style="justify-content:center">
+              <button class="btn" id="biteResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            </div>
+          </section>`;
+        GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+        container.querySelector('#biteResetElimBtn').addEventListener('click', () => { outList = []; newRound(container); });
+        return;
+      }
+      setup();
+      render(container);
+      startTurnCountdown(container);
+    }
+
+    function render(container) {
+      const decor = theme.cls === 'croc'
+        ? '<div class="jaw-nostril left"></div><div class="jaw-nostril right"></div>'
+        : '<div class="shark-fin"></div>';
+
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="bite-jaw">
+            ${timerOn ? '<div class="timer-badge" id="biteTimerBadge">⏱ ' + timerSeconds + 's</div>' : ''}
+            <div class="turn-banner" id="turnBanner"></div>
+            <div class="jaw-stage">
+              <div class="jaw-head theme-${theme.cls}" id="jawHead">
+                ${decor}
+                <div class="jaw-eyebrow left"></div>
+                <div class="jaw-eyebrow right"></div>
+                <div class="jaw-eye left"></div>
+                <div class="jaw-eye right"></div>
+                <div class="jaw-mouth" id="jawMouth">
+                  <div class="teeth-arc" id="teethGrid"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          ${eliminationOn ? eliminatedPanelHtml(outList, 'รายชื่อที่ออกไปแล้ว') : ''}
+          <div id="biteResult"></div>
+        </section>`;
+
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      renderTurnBanner(container);
+      const grid = container.querySelector('#teethGrid');
+      const mouthEl = container.querySelector('#jawMouth');
+      grid.innerHTML = '';
+      const angles = layoutTeethAngles(mouthEl);
+      for (let i = 0; i < TEETH_COUNT; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'tooth';
+        btn.setAttribute('aria-label', `ซี่ฟันที่ ${i + 1}`);
+        positionTooth(btn, i, angles);
+        applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
+        btn.addEventListener('click', () => handlePress(container, i));
+        grid.appendChild(btn);
+      }
+    }
+
+    function renderTurnBanner(container) {
+      const banner = container.querySelector('#turnBanner');
+      if (banner && !gameOver) {
+        banner.textContent = `ตาของ: ${playersRef[turnIndex]}`;
+      }
+    }
+
+    function handlePress(container, i) {
+      if (gameOver || pressed[i]) return;
+      pressed[i] = true;
+      const currentPlayer = playersRef[turnIndex];
+      const myToken = ++activeToken;
+      clearCountdown();
+      SoundManager.play('click');
+
+      const grid = container.querySelector('#teethGrid');
+      const btn = grid.children[i];
+
+      if (i === badToothIndex) {
+        gameOver = true;
+        applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
+        SoundManager.play('lose');
+        Array.from(grid.children).forEach((b, bi) => applyToothVisual(b, bi, { pressed, badToothIndex, gameOver, emoji: theme.emoji }));
+
+        const jawStage = container.querySelector('.jaw-stage');
+        const jawHead = container.querySelector('#jawHead');
+        const jawMouth = container.querySelector('#jawMouth');
+        if (AnimationSetting.isEnabled()) {
+          if (jawHead) jawHead.classList.add('angry', 'chomp');
+          if (jawMouth) jawMouth.classList.add('chomping');
+          if (jawStage) {
+            jawStage.classList.add('flash');
+            setTimeout(() => jawStage.classList.remove('flash'), 450);
+          }
+        }
+        setTimeout(() => {
+          if (myToken !== activeToken) return;
+          showGameOver(container, currentPlayer);
+        }, AnimationSetting.isEnabled() ? 700 : 100);
+      } else {
+        applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
+        turnIndex = (turnIndex + 1) % playersRef.length;
+        renderTurnBanner(container);
+        startTurnCountdown(container);
+      }
+    }
+
+    function showGameOver(container, loser) {
+      if (eliminationOn) outList.push(loser);
+      const resultEl = container.querySelector('#biteResult');
+      resultEl.innerHTML = `
+        <div class="shatter-wrap">
+          <div class="winner-name" style="color:var(--coral-pop)">💥 GAME OVER</div>
+        </div>
+        <p style="margin:6px 0 16px;font-size:1.1rem">${theme.biteWord} <b>${Utils.escapeHtml(loser)}</b> ออกจากเกม!</p>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="biteRestartBtn">🔁 ${eliminationOn ? 'รอบต่อไป' : 'Restart'}</button>
+          <button class="btn secondary" id="biteShareBtn">📤 Share Result</button>
+        </div>`;
+      WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
+      container.querySelector('#biteRestartBtn').addEventListener('click', () => newRound(container));
+      container.querySelector('#biteShareBtn').addEventListener('click', () => ShareResult.open(theme.title, [`${loser} (ผู้แพ้)`]));
+    }
+
+    return {
+      title: theme.title,
+      tagline: theme.tagline,
+      mount,
+      unmount() { gameOver = true; activeToken++; clearCountdown(); if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
+    };
+  }
+
+  Object.keys(THEMES).forEach(id => GameManager.register(id, buildGame(id)));
+})();
+</script>
+
+  <script>
+/* ==========================================================================
+   Settings — toggles for Sound / Animation / Dark Mode + a full reset.
+   Registered like any other "game" so the router treats it identically,
+   but flagged requiresPlayers:false since it needs no roster.
+   ========================================================================== */
+(function registerSettings() {
+  function switchRow(id, label, emoji, checked) {
+    return `
+      <div class="settings-row">
+        <span>${emoji} ${label}</span>
+        <div class="switch ${checked ? 'on' : ''}" id="${id}" role="switch" aria-checked="${checked}" tabindex="0"></div>
+      </div>`;
+  }
+
+  function bindSwitch(container, id, getVal, setVal) {
+    const el = container.querySelector('#' + id);
+    function toggle() {
+      const next = !getVal();
+      setVal(next);
+      el.classList.toggle('on', next);
+      el.setAttribute('aria-checked', String(next));
+      SoundManager.play('click');
+    }
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  }
+
+  function mount(container) {
+    container.innerHTML = `
+      <section class="glass game-stage" style="text-align:left">
+        ${switchRow('soundSwitch', 'Sound', '🔊', SoundManager.isEnabled())}
+        ${switchRow('animSwitch', 'Animation', '✨', AnimationSetting.isEnabled())}
+        ${switchRow('darkSwitch', 'Dark Mode', '🌙', ThemeSetting.isDark())}
+        <div class="settings-row" style="border-bottom:none">
+          <span>🗑 Reset LocalStorage</span>
+          <button class="btn warn" id="resetBtn">Reset</button>
+        </div>
+      </section>
+      <section class="glass game-stage" style="text-align:left; margin-top:16px">
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">ติดต่อ / แจ้งปัญหา</span></div>
+        <div class="contact-box">
+          พบปัญหาการใช้งาน หรืออยากแนะนำเกมใหม่? ส่งอีเมลมาได้เลยที่<br>
+          <a href="mailto:nuttiw.suphalerk@gmail.com?subject=%5Bวงแตก%5D%20แจ้งปัญหา%2Fข้อเสนอแนะ" target="_top">nuttiw.suphalerk@gmail.com</a>
+        </div>
+      </section>`;
+/*
+      container.innerHTML = `
+      <section class="glass game-stage" style="text-align:left">
+        ${switchRow('soundSwitch', 'Sound', '🔊', SoundManager.isEnabled())}
+        ${switchRow('animSwitch', 'Animation', '✨', AnimationSetting.isEnabled())}
+        ${switchRow('darkSwitch', 'Dark Mode', '🌙', ThemeSetting.isDark())}
+        <div class="settings-row" style="border-bottom:none">
+          <span>🗑 Reset LocalStorage</span>
+          <button class="btn warn" id="resetBtn">Reset</button>
+        </div>
+      </section>
+      <section class="glass game-stage" style="text-align:left; margin-top:16px">
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">ติดต่อ / แจ้งปัญหา</span></div>
+        <div class="contact-box">
+          พบปัญหาการใช้งาน หรืออยากแนะนำเกมใหม่? ส่งอีเมลมาได้เลยที่<br>
+          <a href="mailto:nuttiw.suphalerk@gmail.com?subject=%5Bวงแตก%5D%20แจ้งปัญหา%2Fข้อเสนอแนะ" target="_top">nuttiw.suphalerk@gmail.com</a>
+        </div>
+      </section>
+      <section class="glass game-stage" style="text-align:left; margin-top:16px">
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">โฆษณา & ความเป็นส่วนตัว</span></div>
+        <div class="contact-box">
+          เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้เพื่อปรับโฆษณาให้ตรงความสนใจ หากต้องการปิดโฆษณาแบบปรับตามความสนใจ (personalized ads) จัดการได้ที่
+          <a href="https://myadcenter.google.com/" target="_blank" rel="noopener">การตั้งค่าโฆษณาของ Google</a>
+        </div>
+      </section>`;
+      */
+
+    bindSwitch(container, 'soundSwitch', SoundManager.isEnabled, SoundManager.setEnabled);
+    bindSwitch(container, 'animSwitch', AnimationSetting.isEnabled, AnimationSetting.setEnabled);
+    bindSwitch(container, 'darkSwitch', ThemeSetting.isDark, ThemeSetting.setDark);
+
+    container.querySelector('#resetBtn').addEventListener('click', () => {
+      if (window.confirm('ล้างข้อมูลทั้งหมด (ผู้เล่น, การตั้งค่า) ในเครื่องนี้?')) {
+        Storage.resetAll();
+        showToast('ล้างข้อมูลแล้ว กำลังกลับหน้าแรก…');
+        setTimeout(() => window.location.reload(), 900);
+      }
+    });
+  }
+
+  GameManager.register('settings', {
+    title: 'Settings',
+    tagline: 'ปรับแต่งการเล่นให้ถูกใจ',
+    requiresPlayers: false,
+    mount,
+    unmount() {}
+  });
+
+  document.getElementById('settingsShortcut').addEventListener('click', () => App.openGame('settings'));
+})();
+</script>
+
+</body>
+</html>

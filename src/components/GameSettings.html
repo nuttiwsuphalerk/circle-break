@@ -22,6 +22,7 @@ const GameSettingsUtil = (() => {
    *   title: string
    *   elimination: null | { label, on, eliminatedList, onToggle(newVal) }
    *   timer: null | { label, on, seconds, onToggle(newVal), onSeconds(newSeconds) }
+   *   duration: null | { label, value, min, max, step, onChange(newValue) }
    */
   function openModal(cfg) {
     const backdrop = document.createElement('div');
@@ -37,6 +38,13 @@ const GameSettingsUtil = (() => {
       <span>👥 แก้ไข / เพิ่มชื่อผู้เล่น</span>
       <button class="btn secondary" id="gsEditNamesBtn">แก้ไข</button>
     </div>`;
+
+    if (cfg.duration) {
+      html += `<div class="settings-row">
+        <span>${cfg.duration.label}</span>
+        <input type="number" min="${cfg.duration.min}" max="${cfg.duration.max}" step="${cfg.duration.step || 0.5}" class="timer-seconds-input" id="gsDurationValue" value="${cfg.duration.value}">
+      </div>`;
+    }
 
     if (cfg.elimination) {
       html += `<div class="settings-row">
@@ -71,6 +79,15 @@ const GameSettingsUtil = (() => {
     modal.querySelector('#gsEditNamesBtn').addEventListener('click', () => PlayerManager.openModal());
     modal.querySelector('#gsCloseBtn').addEventListener('click', () => backdrop.remove());
     backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+
+    if (cfg.duration) {
+      const durInput = modal.querySelector('#gsDurationValue');
+      durInput.addEventListener('change', () => {
+        const v = Utils.clamp(parseFloat(durInput.value) || cfg.duration.value, cfg.duration.min, cfg.duration.max);
+        durInput.value = v;
+        cfg.duration.onChange(v);
+      });
+    }
 
     if (cfg.elimination) {
       const sw = modal.querySelector('#gsElimSwitch');

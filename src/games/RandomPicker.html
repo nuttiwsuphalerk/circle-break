@@ -5,16 +5,15 @@
    names, slowing down via requestAnimationFrame until it lands there.
 
    Gear settings: edit/add names, elimination mode (winner removed from
-   the next round), and an optional countdown that auto-picks if nobody
-   presses the button in time — handy for keeping a party moving.
+   the next round), and a spin-delay control (how long the shuffle runs
+   before landing on the winner).
    ========================================================================== */
 (function registerRandomPicker() {
   let rafId = null;
   let eliminationOn = false;
   let pickedList = [];
-  let timerOn = false;
-  let timerSeconds = 8;
-  let countdownId = null;
+  let pickDurationSeconds = 2.6;
+  let unsubscribePlayers = null;
 
   function pool() {
     const all = PlayerStore.getAll();
@@ -27,43 +26,21 @@
     return eliminationOn ? pool() : PlayerStore.getAll();
   }
 
-  function clearCountdown() {
-    if (countdownId) { clearInterval(countdownId); countdownId = null; }
-  }
-
-  function startCountdown(container) {
-    clearCountdown();
-    if (!timerOn) return;
-    let remaining = timerSeconds;
-    const badge = container.querySelector('#pickerTimerBadge');
-    if (badge) badge.textContent = `⏱ ${remaining}s`;
-    countdownId = setInterval(() => {
-      remaining -= 1;
-      const b = container.querySelector('#pickerTimerBadge');
-      if (b) b.textContent = `⏱ ${Math.max(remaining, 0)}s`;
-      if (remaining <= 0) {
-        clearCountdown();
-        run(container);
-      }
-    }, 1000);
-  }
-
   function openGearSettings(container) {
     GameSettingsUtil.openModal({
       title: 'Random Picker',
+      duration: {
+        label: '🕒 ตั้งเวลาหน่วงการสุ่ม (วินาที)',
+        value: pickDurationSeconds,
+        min: 1, max: 8, step: 0.5,
+        onChange: (v) => { pickDurationSeconds = v; }
+      },
       elimination: {
         label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
         on: eliminationOn,
         eliminatedList: pickedList,
         eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
         onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
-      },
-      timer: {
-        label: '⏱ ตั้งเวลาสุ่มอัตโนมัติ',
-        on: timerOn,
-        seconds: timerSeconds,
-        onToggle: (next) => { timerOn = next; buildStage(container); },
-        onSeconds: (v) => { timerSeconds = v; startCountdown(container); }
       }
     });
   }
@@ -92,7 +69,6 @@
 
     container.innerHTML = `
       <section class="glass game-stage">
-        ${timerOn ? '<div class="timer-badge" id="pickerTimerBadge">⏱ ' + timerSeconds + 's</div><br>' : ''}
         <div class="picker-display" id="pickerDisplay">พร้อมสุ่ม!</div>
         ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
         <div class="btn-row" style="justify-content:center">
@@ -103,20 +79,24 @@
 
     GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
     container.querySelector('#pickBtn').addEventListener('click', () => run(container));
-    startCountdown(container);
   }
 
   function mount(container) {
     eliminationOn = false;
     pickedList = [];
-    timerOn = false;
-    clearCountdown();
+    pickDurationSeconds = 2.6;
     buildStage(container);
+    // run() already re-queries the live roster at click time, but the
+    // elimination summary screen (and player-count feel of the stage)
+    // should still refresh if the roster changes while just sitting here.
+    if (unsubscribePlayers) unsubscribePlayers();
+    unsubscribePlayers = PlayerStore.onChange(() => {
+      if (!rafId) buildStage(container);
+    });
   }
 
   function run(container) {
     if (rafId) return;
-    clearCountdown();
     const players = activePlayers();
     if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
 
@@ -130,7 +110,7 @@
       return;
     }
 
-    const totalDuration = 2600;
+    const totalDuration = pickDurationSeconds * 1000;
     const start = performance.now();
     let lastTickAt = 0;
 
@@ -176,7 +156,7 @@
     title: 'Random Picker',
     tagline: 'กดสุ่ม แล้วลุ้นว่าใครจะโดนเลือก',
     mount,
-    unmount() { if (rafId) cancelAnimationFrame(rafId); rafId = null; clearCountdown(); }
+    unmount() { if (rafId) cancelAnimationFrame(rafId); rafId = null; if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
   });
 })();
 </script>

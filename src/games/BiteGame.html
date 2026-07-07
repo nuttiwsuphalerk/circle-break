@@ -12,10 +12,103 @@
    ========================================================================== */
 (function registerBiteGames() {
   const TEETH_COUNT = 16;
+  const ROW_COUNT = TEETH_COUNT / 2;
   const THEMES = {
-    'crocodile-bite': { title: 'Crocodile Bite', tagline: 'ผลัดกันกด ระวังโดนงับ', emoji: '🐊', biteWord: 'งับ!' },
-    'shark-bite': { title: 'Shark Bite', tagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน', emoji: '🦈', biteWord: 'ฉลามงับ!' }
+    'crocodile-bite': { title: 'Crocodile Bite', tagline: 'ผลัดกันกด ระวังโดนงับ', emoji: '🐊', biteWord: 'งับ!', cls: 'croc' },
+    'shark-bite': { title: 'Shark Bite', tagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน', emoji: '🦈', biteWord: 'ฉลามงับ!', cls: 'shark' }
   };
+
+  /** Places each tooth's ROOT exactly on the rim of the mouth ellipse
+      (the .jaw-mouth box, a true ellipse via border-radius:50%), then
+      rotates the tooth to point inward along that rim's local normal —
+      like real teeth radiating from the jawbone.
+
+      Points are spaced by equal ARC LENGTH along the rim, not equal
+      angle: this mouth is much wider than it is tall, so equal angle
+      steps bunch teeth together near the corners (where the ellipse
+      curves tightly) while spacing them too far apart near the top/
+      bottom (where it's nearly flat). Equal arc length keeps every
+      tooth's footprint genuinely clear of its neighbors — verified by
+      simulating the exact rotated bounding boxes, not just eyeballed. */
+  const MOUTH_SPREAD_DEG = 125; // total sweep per row, centered on top/bottom
+  const UPPER_CENTER_DEG = 270, LOWER_CENTER_DEG = 90;
+
+  /** Returns `count` angles (degrees) evenly spaced by arc length along
+      an ellipse of pixel size (mouthW x mouthH), between startDeg/endDeg. */
+  function evenArcAngles(mouthW, mouthH, startDeg, endDeg, count) {
+    const a = mouthW / 2, b = mouthH / 2;
+    const startRad = startDeg * Math.PI / 180, endRad = endDeg * Math.PI / 180;
+    const N = 400;
+    const thetas = [startRad];
+    const cum = [0];
+    for (let k = 1; k <= N; k++) {
+      const th = startRad + (endRad - startRad) * k / N;
+      const midTh = (thetas[k - 1] + th) / 2;
+      const speed = Math.sqrt(a * a * Math.sin(midTh) ** 2 + b * b * Math.cos(midTh) ** 2);
+      cum.push(cum[k - 1] + speed * (th - thetas[k - 1]));
+      thetas.push(th);
+    }
+    const total = cum[N];
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      const target = count === 1 ? total / 2 : total * i / (count - 1);
+      let lo = 0, hi = N;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < target) lo = mid + 1; else hi = mid; }
+      result.push(thetas[lo] * 180 / Math.PI);
+    }
+    return result;
+  }
+
+  /** Lays out one full set of tooth angles for a given rendered mouth
+      size. Call once per render (mouth pixel size only changes on
+      resize/re-render, so this doesn't need to run per-tooth). */
+  function layoutTeethAngles(mouthEl) {
+    const rect = mouthEl.getBoundingClientRect();
+    const mouthW = rect.width || 300, mouthH = rect.height || 180;
+    const half = MOUTH_SPREAD_DEG / 2;
+    const upper = evenArcAngles(mouthW, mouthH, UPPER_CENTER_DEG - half, UPPER_CENTER_DEG + half, ROW_COUNT);
+    const lower = evenArcAngles(mouthW, mouthH, LOWER_CENTER_DEG - half, LOWER_CENTER_DEG + half, ROW_COUNT);
+    return { upper, lower };
+  }
+
+  function positionTooth(el, i, angles) {
+    const isUpper = i < ROW_COUNT;
+    const idx = isUpper ? i : i - ROW_COUNT;
+    const deg = isUpper ? angles.upper[idx] : angles.lower[idx];
+    const rad = deg * Math.PI / 180;
+    const xPct = 50 + 50 * Math.cos(rad);
+    const yPct = 50 + 50 * Math.sin(rad);
+    const rot = deg - (isUpper ? UPPER_CENTER_DEG : LOWER_CENTER_DEG);
+    el.style.left = xPct.toFixed(2) + '%';
+    el.style.top = yPct.toFixed(2) + '%';
+    el.style.transform = `translate(-50%, ${isUpper ? '0%' : '-100%'}) rotate(${rot.toFixed(1)}deg)`;
+    el.classList.add(isUpper ? 'upper' : 'lower');
+  }
+
+  /** Applies the correct look for a tooth given the current game state:
+      untouched / already-pressed-safe (clearly recolored, no reliance on
+      a hard-to-see glyph) / the revealed bad tooth / locked-out at
+      game-over. Shared by the initial render and by handlePress so the
+      two paths can never drift out of sync. */
+  function applyToothVisual(btn, i, ctx) {
+    btn.classList.remove('pressed', 'bad', 'locked');
+    btn.disabled = false;
+    btn.textContent = '';
+    if (ctx.pressed[i]) {
+      btn.disabled = true;
+      if (i === ctx.badToothIndex && ctx.gameOver) {
+        btn.classList.remove('upper', 'lower');
+        btn.classList.add('bad');
+        btn.style.transform = 'translate(-50%,-50%) rotate(0deg)';
+        btn.textContent = ctx.emoji;
+      } else {
+        btn.classList.add('pressed');
+      }
+    } else if (ctx.gameOver) {
+      btn.disabled = true;
+      btn.classList.add('locked');
+    }
+  }
 
   function buildGame(themeId) {
     const theme = THEMES[themeId];
@@ -30,6 +123,7 @@
     let timerOn = false;
     let timerSeconds = 10;
     let countdownId = null;
+    let unsubscribePlayers = null;
 
     function survivors() {
       const all = PlayerStore.getAll();
@@ -105,6 +199,15 @@
       timerOn = false;
       clearCountdown();
       newRound(container);
+      // Turn order is shuffled once per round, so a player added mid-turn
+      // only joins the *next* round by design. But if nobody has pressed
+      // a tooth yet this round, it's still the "getting ready" moment —
+      // refresh so a newly-added player is included right away instead
+      // of silently waiting for the round after this one.
+      if (unsubscribePlayers) unsubscribePlayers();
+      unsubscribePlayers = PlayerStore.onChange(() => {
+        if (!gameOver && pressed.every(p => !p)) newRound(container);
+      });
     }
 
     function newRound(container) {
@@ -130,13 +233,27 @@
     }
 
     function render(container) {
+      const decor = theme.cls === 'croc'
+        ? '<div class="jaw-nostril left"></div><div class="jaw-nostril right"></div>'
+        : '<div class="shark-fin"></div>';
+
       container.innerHTML = `
         <section class="glass game-stage">
           <div class="bite-jaw">
-            <div style="font-size:2.6rem">${theme.emoji}</div>
             ${timerOn ? '<div class="timer-badge" id="biteTimerBadge">⏱ ' + timerSeconds + 's</div>' : ''}
             <div class="turn-banner" id="turnBanner"></div>
-            <div class="teeth-grid" id="teethGrid"></div>
+            <div class="jaw-stage">
+              <div class="jaw-head theme-${theme.cls}" id="jawHead">
+                ${decor}
+                <div class="jaw-eyebrow left"></div>
+                <div class="jaw-eyebrow right"></div>
+                <div class="jaw-eye left"></div>
+                <div class="jaw-eye right"></div>
+                <div class="jaw-mouth" id="jawMouth">
+                  <div class="teeth-arc" id="teethGrid"></div>
+                </div>
+              </div>
+            </div>
           </div>
           ${eliminationOn ? eliminatedPanelHtml(outList, 'รายชื่อที่ออกไปแล้ว') : ''}
           <div id="biteResult"></div>
@@ -145,13 +262,15 @@
       GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
       renderTurnBanner(container);
       const grid = container.querySelector('#teethGrid');
+      const mouthEl = container.querySelector('#jawMouth');
       grid.innerHTML = '';
+      const angles = layoutTeethAngles(mouthEl);
       for (let i = 0; i < TEETH_COUNT; i++) {
         const btn = document.createElement('button');
         btn.className = 'tooth';
         btn.setAttribute('aria-label', `ซี่ฟันที่ ${i + 1}`);
-        btn.disabled = pressed[i];
-        btn.textContent = pressed[i] ? '✕' : '🦷';
+        positionTooth(btn, i, angles);
+        applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
         btn.addEventListener('click', () => handlePress(container, i));
         grid.appendChild(btn);
       }
@@ -176,17 +295,28 @@
       const btn = grid.children[i];
 
       if (i === badToothIndex) {
-        btn.classList.add('bad');
-        btn.textContent = theme.emoji;
         gameOver = true;
+        applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
         SoundManager.play('lose');
-        Array.from(grid.children).forEach(b => b.disabled = true);
+        Array.from(grid.children).forEach((b, bi) => applyToothVisual(b, bi, { pressed, badToothIndex, gameOver, emoji: theme.emoji }));
+
+        const jawStage = container.querySelector('.jaw-stage');
+        const jawHead = container.querySelector('#jawHead');
+        const jawMouth = container.querySelector('#jawMouth');
+        if (AnimationSetting.isEnabled()) {
+          if (jawHead) jawHead.classList.add('angry', 'chomp');
+          if (jawMouth) jawMouth.classList.add('chomping');
+          if (jawStage) {
+            jawStage.classList.add('flash');
+            setTimeout(() => jawStage.classList.remove('flash'), 450);
+          }
+        }
         setTimeout(() => {
           if (myToken !== activeToken) return;
           showGameOver(container, currentPlayer);
-        }, 450);
+        }, AnimationSetting.isEnabled() ? 700 : 100);
       } else {
-        btn.textContent = '✕';
+        applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
         turnIndex = (turnIndex + 1) % playersRef.length;
         renderTurnBanner(container);
         startTurnCountdown(container);
@@ -214,7 +344,7 @@
       title: theme.title,
       tagline: theme.tagline,
       mount,
-      unmount() { gameOver = true; activeToken++; clearCountdown(); }
+      unmount() { gameOver = true; activeToken++; clearCountdown(); if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
     };
   }
 

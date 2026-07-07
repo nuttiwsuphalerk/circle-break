@@ -52,16 +52,20 @@
   }
 
   *,*::before,*::after{ box-sizing:border-box; }
-  html{ font-size:18px; }
+  html{ font-size:18px; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   html,body{ height:100%; }
   body{
     margin:0;
     background: radial-gradient(circle at 15% -10%, var(--surface-soft) 0%, var(--bg) 55%) fixed;
     color: var(--text);
     font-family: var(--font-body);
+    font-size:1rem;
+    line-height:1.5;
     -webkit-font-smoothing:antialiased;
     transition: background .4s var(--ease-smooth), color .4s var(--ease-smooth);
     overflow-x:hidden;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   body.no-anim, body.no-anim *{ animation-duration:0.001s !important; transition-duration:0.001s !important; }
@@ -357,29 +361,138 @@
     top:-16px; opacity:0; transition:opacity .2s; white-space:nowrap; z-index:3;
   }
 
-  /* Crocodile / shark bite */
+  /* Crocodile / shark bite — animal head with an open mouth; each tooth
+     is an individual pickable fang, its root placed exactly on the rim
+     of the mouth ellipse and rotated to point inward (see BiteGame.html
+     for the geometry — this file only carries the visual styling). */
   .bite-jaw{
-    position:relative; width:min(340px,88vw); margin:10px auto 20px;
+    position:relative; width:100%;
     display:flex; flex-direction:column; align-items:center;
+    margin-bottom:6px;
   }
-  .teeth-grid{
-    display:grid; grid-template-columns:repeat(8,1fr); gap:6px;
-    width:100%;
+  .jaw-stage{
+    position:relative; width:min(360px,88vw); margin:4px auto 18px;
   }
-  .tooth{
-    aspect-ratio:1; background:var(--mist-white); border-radius:6px 6px 10px 10px;
-    border:2px solid var(--border); cursor:pointer; font-size:1.6rem; color:#14102B;
+  .jaw-head{
+    position:relative; width:100%; aspect-ratio:1.55; border-radius:48% 48% 44% 44% / 62% 62% 38% 38%;
+    box-shadow:0 18px 40px rgba(0,0,0,.5), inset 0 -14px 30px rgba(0,0,0,.25);
     display:flex; align-items:center; justify-content:center;
-    transition: transform .15s, background .2s;
   }
-  .tooth:hover:not(:disabled){ transform:translateY(-4px); }
-  .tooth:disabled{ opacity:.3; cursor:not-allowed; }
-  .tooth.bad{ background:var(--coral-pop); animation: bite-shake .4s; }
+  .jaw-head.theme-croc{ background: radial-gradient(circle at 32% 20%, #7ec158 0%, #3f7a34 55%, #234f1d 100%); }
+  .jaw-head.theme-shark{ background: radial-gradient(circle at 32% 20%, #cbd9e2 0%, #7c93a3 55%, #46596a 100%); }
+
+  .jaw-eye{
+    position:absolute; top:10px; width:24px; height:24px; border-radius:50%;
+    background:#f8f6ff; border:3px solid rgba(0,0,0,.3);
+    display:flex; align-items:center; justify-content:center; z-index:2;
+    box-shadow:0 3px 6px rgba(0,0,0,.3);
+    transition: background .2s, border-color .2s;
+  }
+  .jaw-eye::after{ content:''; width:10px; height:10px; border-radius:50%; background:#14102B; transition:background .2s; }
+  .jaw-eye.left{ left:20%; } .jaw-eye.right{ right:20%; }
+
+  .jaw-eyebrow{
+    position:absolute; top:1px; width:26px; height:6px; border-radius:3px;
+    background:#1a1108; z-index:3; opacity:0; transition:opacity .12s;
+  }
+  .jaw-eyebrow.left{ left:16%; transform:rotate(20deg); }
+  .jaw-eyebrow.right{ right:16%; transform:rotate(-20deg); }
+
+  .jaw-head.angry .jaw-eyebrow{ opacity:1; }
+  .jaw-head.angry .jaw-eye{ background:#ffd7d7; border-color:#7a0e0e; }
+  .jaw-head.angry .jaw-eye::after{ background:#7a0e0e; }
+
+  .jaw-nostril{
+    position:absolute; top:2px; width:9px; height:13px; border-radius:50%;
+    background:#1f3a19; z-index:2;
+  }
+  .jaw-nostril.left{ left:45%; } .jaw-nostril.right{ right:45%; }
+
+  .shark-fin{
+    position:absolute; top:-34px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent;
+    border-bottom:42px solid #7c93a3; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4)); z-index:1;
+  }
+
+  .jaw-mouth{
+    position:relative; width:90%; height:62%; border-radius:50%;
+    background: radial-gradient(ellipse at center, #a3241f 0%, #5c0f0c 62%, #2a0605 100%);
+    box-shadow: inset 0 14px 30px rgba(0,0,0,.7), inset 0 -10px 20px rgba(0,0,0,.55);
+    overflow:visible;
+    transform-origin:center center;
+  }
+  .jaw-mouth.chomping{
+    animation: mouth-snap-shut .5s cubic-bezier(.65,0,.35,1) forwards;
+  }
+  @keyframes mouth-snap-shut{
+    0%{ transform:scaleY(1); }
+    30%{ transform:scaleY(.7); }
+    55%{ transform:scaleY(.12); }
+    70%{ transform:scaleY(.22); }
+    100%{ transform:scaleY(.12); }
+  }
+
+  .jaw-stage{ position:relative; }
+  .jaw-stage.flash::before{
+    content:''; position:absolute; inset:-16px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,70,70,.55) 0%, rgba(255,70,70,0) 70%);
+    animation: flash-pulse .45s ease-out forwards; pointer-events:none; z-index:6;
+  }
+  @keyframes flash-pulse{ from{ opacity:1; transform:scale(.75);} to{ opacity:0; transform:scale(1.25);} }
+
+  .teeth-arc{ position:absolute; inset:0; }
+
+  /* Fat, blunt-tipped teeth — a rounded peg shape (flat where it meets
+     the gum, gently domed at the tip) rather than a thin sharp spike,
+     for a bigger, easier-to-tap target. Rotation is applied inline per
+     tooth by JS to follow the mouth rim's curve using real ellipse
+     geometry (root sits exactly on the rim), so hover/transition here
+     only ever touches color/filter, never transform. */
+  .tooth{
+    position:absolute; width:8%; aspect-ratio:1.2;
+    background:linear-gradient(180deg,#fffdf8,#e6ddc8);
+    border:1px solid rgba(0,0,0,.3);
+    cursor:pointer;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
+    transition: filter .15s, background .15s;
+  }
+  .tooth.upper{ border-radius:0 0 50% 50% / 0 0 65% 65%; }
+  .tooth.lower{ border-radius:50% 50% 0 0 / 65% 65% 0 0; }
+  .tooth:hover:not(:disabled){ filter:brightness(1.15); }
+  .tooth:disabled{ cursor:not-allowed; }
+
+  /* Pressed-but-safe: an unmistakable color swap (not just a faint "X")
+     so it reads at a glance which teeth have already been tried. */
+  .tooth.pressed{
+    background:linear-gradient(180deg,#57606f,#2b323d);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.5);
+  }
+  /* Untouched teeth once the game has ended — dimmed so the eye goes
+     straight to the revealed bad tooth and the already-tried ones. */
+  .tooth.locked{ opacity:.28; }
+
+  .tooth.bad{
+    position:absolute; width:15%; aspect-ratio:1;
+    background:transparent; border:none; box-shadow:none;
+    font-size:2.1rem; display:flex; align-items:center; justify-content:center;
+    z-index:5; animation: bite-shake .4s; border-radius:0;
+  }
+  .jaw-head.chomp{ animation: chomp-shake .55s var(--ease-out-back); }
+  @keyframes chomp-shake{
+    0%{ transform:translate(0,0) rotate(0) scale(1); }
+    12%{ transform:translate(-4px,4px) rotate(-3deg) scale(1.05); }
+    24%{ transform:translate(8px,-6px) rotate(4deg) scale(1.08); }
+    38%{ transform:translate(-9px,3px) rotate(-4deg) scale(1.04); }
+    52%{ transform:translate(7px,-3px) rotate(3deg) scale(1.02); }
+    66%{ transform:translate(-5px,2px) rotate(-2deg) scale(1.01); }
+    80%{ transform:translate(3px,-1px) rotate(1deg) scale(1); }
+    100%{ transform:translate(0,0) rotate(0) scale(1); }
+  }
   @keyframes bite-shake{
-    0%,100%{ transform:translateX(0); } 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}
+    0%,100%{ transform:translate(-50%,-50%); } 25%{transform:translate(calc(-50% - 6px),-50%);} 75%{transform:translate(calc(-50% + 6px),-50%);}
   }
   .turn-banner{
-    font-size:1.15rem; font-weight:700; margin-bottom:14px; color:var(--accent);
+    font-size:1.15rem; font-weight:700; margin:0 0 14px; color:var(--accent);
   }
 
   /* Settings */
@@ -474,7 +587,23 @@
   footer .credit a:hover{ text-decoration:underline; }
 
   @media (max-width:480px){
-    .app-header{ padding:36px 16px 22px; }
-    .break-ring{ width:240px; height:240px; }
+    html{ font-size:17px; }
+    .app-header{ padding:32px 14px 20px; }
+    .break-ring{ width:220px; height:220px; }
+    main{ padding:0 12px 50px; }
+    .menu-card{ padding:22px 18px; }
+    .menu-card .emoji{ font-size:2.6rem; }
+    .menu-card .label{ font-size:1.2rem; }
+    .btn{ padding:13px 20px; font-size:1rem; }
+    .player-input-row input{ padding:12px 16px; font-size:1rem; }
+    .icon-btn, .back-btn{ top:12px; }
+    .modal{ padding:20px 18px; }
+    .winner-name{ font-size:2rem; }
+    .teeth-grid{ grid-template-columns:repeat(4,1fr); gap:8px; }
+  }
+
+  @media (max-width:360px){
+    html{ font-size:15.5px; }
+    .break-ring{ width:180px; height:180px; }
   }
 </style>

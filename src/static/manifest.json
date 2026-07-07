@@ -1,0 +1,20 @@
+{
+  "name": "วงแตก (Circle Break) — Party Mini Game",
+  "short_name": "วงแตก",
+  "description": "สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง และเกมงับปาก สำหรับปาร์ตี้และกิจกรรมกลุ่ม เล่นฟรี ไม่ต้องล็อกอิน ข้อมูลผู้เล่นเก็บในเครื่องเท่านั้น",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#14102B",
+  "theme_color": "#14102B",
+  "lang": "th",
+  "categories": ["entertainment", "games", "utilities"],
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
