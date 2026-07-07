@@ -4,6 +4,11 @@
   "version": "1.0.0",
   "description": "วงแตก (Circle Break) — static build for Cloudflare Pages / GitHub Pages / Netlify.",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.107.0"
   }
 }
