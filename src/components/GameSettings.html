@@ -1,0 +1,110 @@
+<script>
+/* ==========================================================================
+   GameSettingsUtil — the gear icon that appears inside every game's stage.
+   Every game wires up its own elimination/timer behavior, but they all
+   share this one modal shell so the UI stays consistent.
+   ========================================================================== */
+const GameSettingsUtil = (() => {
+  /** Appends a gear button into a game-stage section; returns the button. */
+  function attachGearButton(stageEl, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'game-gear-btn';
+    btn.setAttribute('aria-label', 'ตั้งค่าเกมนี้');
+    btn.title = 'ตั้งค่าเกมนี้';
+    btn.textContent = '⚙';
+    btn.addEventListener('click', onClick);
+    stageEl.appendChild(btn);
+    return btn;
+  }
+
+  /**
+   * @param {Object} cfg
+   *   title: string
+   *   elimination: null | { label, on, eliminatedList, onToggle(newVal) }
+   *   timer: null | { label, on, seconds, onToggle(newVal), onSeconds(newSeconds) }
+   */
+  function openModal(cfg) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    const modal = document.createElement('div');
+    modal.className = 'modal glass';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', `ตั้งค่า ${cfg.title}`);
+
+    let html = `<h3>⚙ ตั้งค่า · ${Utils.escapeHtml(cfg.title)}</h3>`;
+    html += `<div class="settings-row" style="padding-top:4px">
+      <span>👥 แก้ไข / เพิ่มชื่อผู้เล่น</span>
+      <button class="btn secondary" id="gsEditNamesBtn">แก้ไข</button>
+    </div>`;
+
+    if (cfg.elimination) {
+      html += `<div class="settings-row">
+        <span>${cfg.elimination.label}</span>
+        <div class="switch ${cfg.elimination.on ? 'on' : ''}" id="gsElimSwitch" role="switch" aria-checked="${cfg.elimination.on}" tabindex="0"></div>
+      </div>`;
+    }
+
+    if (cfg.timer) {
+      html += `<div class="settings-row">
+        <span>${cfg.timer.label}</span>
+        <div class="switch ${cfg.timer.on ? 'on' : ''}" id="gsTimerSwitch" role="switch" aria-checked="${cfg.timer.on}" tabindex="0"></div>
+      </div>
+      <div class="settings-subrow">
+        <span style="color:var(--text-dim); font-size:.88rem">เวลาต่อรอบ (วินาที)</span>
+        <input type="number" min="3" max="60" step="1" class="timer-seconds-input" id="gsTimerSeconds" value="${cfg.timer.seconds}">
+      </div>`;
+    }
+
+    if (cfg.elimination && cfg.elimination.eliminatedList && cfg.elimination.eliminatedList.length) {
+      html += `<div class="eliminated-panel">
+        <div class="eliminated-title">${cfg.elimination.eliminatedListLabel || 'รายชื่อที่คัดออกแล้ว'}</div>
+        <div class="eliminated-chips">${cfg.elimination.eliminatedList.map((n, i) => `<span class="eliminated-chip"><span class="rank">${i + 1}.</span>${Utils.escapeHtml(n)}</span>`).join('')}</div>
+      </div>`;
+    }
+
+    html += `<div class="btn-row" style="margin-top:12px"><button class="btn" id="gsCloseBtn">ปิด</button></div>`;
+    modal.innerHTML = html;
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    modal.querySelector('#gsEditNamesBtn').addEventListener('click', () => PlayerManager.openModal());
+    modal.querySelector('#gsCloseBtn').addEventListener('click', () => backdrop.remove());
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+
+    if (cfg.elimination) {
+      const sw = modal.querySelector('#gsElimSwitch');
+      const toggle = () => {
+        const next = !sw.classList.contains('on');
+        sw.classList.toggle('on', next);
+        sw.setAttribute('aria-checked', String(next));
+        SoundManager.play('click');
+        cfg.elimination.onToggle(next);
+      };
+      sw.addEventListener('click', toggle);
+      sw.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    }
+
+    if (cfg.timer) {
+      const sw = modal.querySelector('#gsTimerSwitch');
+      const secInput = modal.querySelector('#gsTimerSeconds');
+      const toggle = () => {
+        const next = !sw.classList.contains('on');
+        sw.classList.toggle('on', next);
+        sw.setAttribute('aria-checked', String(next));
+        SoundManager.play('click');
+        cfg.timer.onToggle(next);
+      };
+      sw.addEventListener('click', toggle);
+      sw.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      secInput.addEventListener('change', () => {
+        const v = Utils.clamp(parseInt(secInput.value, 10) || cfg.timer.seconds, 3, 60);
+        secInput.value = v;
+        cfg.timer.onSeconds(v);
+      });
+    }
+  }
+
+  return { attachGearButton, openModal };
+})();
+</script>

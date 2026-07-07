@@ -1,0 +1,78 @@
+<script>
+/* ==========================================================================
+   Settings — toggles for Sound / Animation / Dark Mode + a full reset.
+   Registered like any other "game" so the router treats it identically,
+   but flagged requiresPlayers:false since it needs no roster.
+   ========================================================================== */
+(function registerSettings() {
+  function switchRow(id, label, emoji, checked) {
+    return `
+      <div class="settings-row">
+        <span>${emoji} ${label}</span>
+        <div class="switch ${checked ? 'on' : ''}" id="${id}" role="switch" aria-checked="${checked}" tabindex="0"></div>
+      </div>`;
+  }
+
+  function bindSwitch(container, id, getVal, setVal) {
+    const el = container.querySelector('#' + id);
+    function toggle() {
+      const next = !getVal();
+      setVal(next);
+      el.classList.toggle('on', next);
+      el.setAttribute('aria-checked', String(next));
+      SoundManager.play('click');
+    }
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  }
+
+  function mount(container) {
+    container.innerHTML = `
+      <section class="glass game-stage" style="text-align:left">
+        ${switchRow('soundSwitch', 'Sound', '🔊', SoundManager.isEnabled())}
+        ${switchRow('animSwitch', 'Animation', '✨', AnimationSetting.isEnabled())}
+        ${switchRow('darkSwitch', 'Dark Mode', '🌙', ThemeSetting.isDark())}
+        <div class="settings-row" style="border-bottom:none">
+          <span>🗑 Reset LocalStorage</span>
+          <button class="btn warn" id="resetBtn">Reset</button>
+        </div>
+      </section>
+      <section class="glass game-stage" style="text-align:left; margin-top:16px">
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">ติดต่อ / แจ้งปัญหา</span></div>
+        <div class="contact-box">
+          พบปัญหาการใช้งาน หรืออยากแนะนำเกมใหม่? ส่งอีเมลมาได้เลยที่<br>
+          <a href="mailto:nuttiw.suphalerk@gmail.com?subject=%5Bวงแตก%5D%20แจ้งปัญหา%2Fข้อเสนอแนะ" target="_top">nuttiw.suphalerk@gmail.com</a>
+        </div>
+      </section>
+      <section class="glass game-stage" style="text-align:left; margin-top:16px">
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">โฆษณา & ความเป็นส่วนตัว</span></div>
+        <div class="contact-box">
+          เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้เพื่อปรับโฆษณาให้ตรงความสนใจ หากต้องการปิดโฆษณาแบบปรับตามความสนใจ (personalized ads) จัดการได้ที่
+          <a href="https://myadcenter.google.com/" target="_blank" rel="noopener">การตั้งค่าโฆษณาของ Google</a>
+        </div>
+      </section>`;
+
+    bindSwitch(container, 'soundSwitch', SoundManager.isEnabled, SoundManager.setEnabled);
+    bindSwitch(container, 'animSwitch', AnimationSetting.isEnabled, AnimationSetting.setEnabled);
+    bindSwitch(container, 'darkSwitch', ThemeSetting.isDark, ThemeSetting.setDark);
+
+    container.querySelector('#resetBtn').addEventListener('click', () => {
+      if (window.confirm('ล้างข้อมูลทั้งหมด (ผู้เล่น, การตั้งค่า) ในเครื่องนี้?')) {
+        Storage.resetAll();
+        showToast('ล้างข้อมูลแล้ว กำลังกลับหน้าแรก…');
+        setTimeout(() => window.location.reload(), 900);
+      }
+    });
+  }
+
+  GameManager.register('settings', {
+    title: 'Settings',
+    tagline: 'ปรับแต่งการเล่นให้ถูกใจ',
+    requiresPlayers: false,
+    mount,
+    unmount() {}
+  });
+
+  document.getElementById('settingsShortcut').addEventListener('click', () => App.openGame('settings'));
+})();
+</script>

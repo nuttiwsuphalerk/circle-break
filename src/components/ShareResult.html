@@ -1,0 +1,49 @@
+<script>
+/* ==========================================================================
+   ShareResult — one shared "share this result" modal used by every game.
+   Nothing here ever leaves the browser except via the user's own explicit
+   copy / download / share action — there is no server call involved.
+   ========================================================================== */
+const ShareResult = (() => {
+  /**
+   * @param {string} title - e.g. "Running Race", "Spin Wheel"
+   * @param {string[]} results - ordered list, winner first
+   */
+  function open(title, results) {
+    const text = ShareUtil.buildText(title, results);
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal glass" role="dialog" aria-modal="true" aria-label="แชร์ผลการแข่งขัน">
+        <h3>📤 Share Result</h3>
+        <div class="share-preview">${Utils.escapeHtml(text)}</div>
+        <div class="btn-row">
+          <button class="btn" id="shareCopyBtn">📋 Copy Text</button>
+          <button class="btn secondary" id="shareImageBtn">🖼 Generate Image</button>
+          <button class="btn ghost" id="shareCloseBtn">ปิด</button>
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+    backdrop.querySelector('#shareCloseBtn').addEventListener('click', () => backdrop.remove());
+
+    backdrop.querySelector('#shareCopyBtn').addEventListener('click', async () => {
+      const ok = await ShareUtil.copyText(text);
+      showToast(ok ? 'คัดลอกข้อความแล้ว ✅' : 'คัดลอกไม่สำเร็จ');
+    });
+
+    backdrop.querySelector('#shareImageBtn').addEventListener('click', async () => {
+      const canvas = ShareUtil.renderImage(title, results);
+      const shared = await ShareUtil.shareCanvas(canvas, text);
+      if (!shared) {
+        ShareUtil.downloadCanvas(canvas, 'circle-break-result.png');
+        showToast('บันทึกรูปภาพแล้ว ✅');
+      }
+    });
+  }
+
+  return { open };
+})();
+</script>

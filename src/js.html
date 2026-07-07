@@ -1,0 +1,593 @@
+<script>
+/* ==========================================================================
+   วงแตก (Circle Break) — Core Engine
+   No frameworks. No network calls. Everything lives in the browser.
+   Load order: this file first, then components/*, then games/*, then App.init().
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------
+   Storage — thin, defensive wrapper around window.localStorage.
+   Only ever touches the four keys the spec allows: players, sound,
+   dark mode, animation. Nothing else is ever written.
+   --------------------------------------------------------------------- */
+const Storage = (() => {
+  const PREFIX = 'cb_';
+  const KNOWN_KEYS = ['players', 'sound', 'darkMode', 'animation'];
+
+  function get(key, fallback) {
+    try {
+      const raw = window.localStorage.getItem(PREFIX + key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function set(key, value) {
+    try {
+      window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function resetAll() {
+    KNOWN_KEYS.forEach(k => window.localStorage.removeItem(PREFIX + k));
+  }
+
+  return { get, set, resetAll };
+})();
+
+/* ---------------------------------------------------------------------
+   Utils — shared pure helpers used by every game.
+   --------------------------------------------------------------------- */
+const Utils = (() => {
+  /** Fisher-Yates shuffle — unbiased, in place, returns the same array. */
+  function fisherYates(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /** Pick one random index fairly from a length. */
+  function randomIndex(length) {
+    return Math.floor(Math.random() * length);
+  }
+
+  /** Random float between min (inclusive) and max (exclusive). */
+  function randomRange(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function uid() {
+    return 'id-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  /** Simple ease-out cubic, used for spin-down animations. */
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  return { fisherYates, randomIndex, randomRange, uid, clamp, easeOutCubic, escapeHtml };
+})();
+
+/* ---------------------------------------------------------------------
+   PlayerStore — the single shared player roster every game reads from.
+   --------------------------------------------------------------------- */
+const PlayerStore = (() => {
+  const MIN_PLAYERS = 2;
+  const MAX_PLAYERS = 100;
+  let players = Storage.get('players', []);
+  const listeners = [];
+
+  function persist() {
+    Storage.set('players', players);
+    listeners.forEach(fn => fn(players.slice()));
+  }
+
+  function onChange(fn) {
+    listeners.push(fn);
+    return () => {
+      const idx = listeners.indexOf(fn);
+      if (idx !== -1) listeners.splice(idx, 1);
+    };
+  }
+
+  function getAll() {
+    return players.slice();
+  }
+
+  function count() {
+    return players.length;
+  }
+
+  function existsCaseInsensitive(name) {
+    const n = name.trim().toLowerCase();
+    return players.some(p => p.toLowerCase() === n);
+  }
+
+  function add(name) {
+    const trimmed = (name || '').trim();
+    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
+    if (players.length >= MAX_PLAYERS) return { ok: false, error: `เพิ่มได้สูงสุด ${MAX_PLAYERS} คน` };
+    if (existsCaseInsensitive(trimmed)) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    players.push(trimmed);
+    persist();
+    return { ok: true };
+  }
+
+  function remove(name) {
+    players = players.filter(p => p !== name);
+    persist();
+  }
+
+  function edit(oldName, newName) {
+    const trimmed = (newName || '').trim();
+    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
+    const dup = players.some(p => p !== oldName && p.toLowerCase() === trimmed.toLowerCase());
+    if (dup) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    const idx = players.indexOf(oldName);
+    if (idx === -1) return { ok: false, error: 'ไม่พบชื่อนี้' };
+    players[idx] = trimmed;
+    persist();
+    return { ok: true };
+  }
+
+  function clear() {
+    players = [];
+    persist();
+  }
+
+  function shuffle() {
+    Utils.fisherYates(players);
+    persist();
+    return players.slice();
+  }
+
+  /** Parses text separated by newlines and/or commas into unique names. */
+  function parseImportText(text) {
+    return (text || '')
+      .split(/[\n,]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  /** Replaces the whole roster with a deduped, capped import. */
+  function importList(text) {
+    const raw = parseImportText(text);
+    const seen = new Set();
+    const result = [];
+    for (const name of raw) {
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(name);
+      if (result.length >= MAX_PLAYERS) break;
+    }
+    if (result.length < MIN_PLAYERS) {
+      return { ok: false, error: `ต้องมีผู้เล่นอย่างน้อย ${MIN_PLAYERS} คน` };
+    }
+    players = result;
+    persist();
+    return { ok: true, count: result.length, skipped: raw.length - result.length };
+  }
+
+  function canStartGame() {
+    return players.length >= MIN_PLAYERS;
+  }
+
+  return {
+    MIN_PLAYERS, MAX_PLAYERS,
+    getAll, count, add, remove, edit, clear, shuffle,
+    importList, canStartGame, onChange
+  };
+})();
+
+/* ---------------------------------------------------------------------
+   SoundManager — tiny Web Audio synthesizer. No audio files are
+   downloaded from anywhere, so there is nothing to fetch and nothing
+   to track; every "sound" is generated locally with an oscillator.
+   --------------------------------------------------------------------- */
+const SoundManager = (() => {
+  let enabled = Storage.get('sound', true);
+  let ctx = null;
+
+  function ensureCtx() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ctx = new AC();
+    }
+    return ctx;
+  }
+
+  function tone(freq, duration, type = 'sine', gainPeak = 0.15, delay = 0) {
+    if (!enabled) return;
+    const c = ensureCtx();
+    if (!c) return;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    const startAt = c.currentTime + delay;
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(gainPeak, startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+    osc.connect(gain).connect(c.destination);
+    osc.start(startAt);
+    osc.stop(startAt + duration + 0.02);
+  }
+
+  const sounds = {
+    click: () => tone(520, 0.08, 'triangle', 0.12),
+    winner: () => { tone(660, 0.15, 'triangle'); tone(880, 0.2, 'triangle', 0.15, 0.12); tone(1100, 0.3, 'triangle', 0.15, 0.24); },
+    lose: () => { tone(220, 0.25, 'sawtooth', 0.12); tone(160, 0.35, 'sawtooth', 0.12, 0.15); },
+    countdown: () => tone(440, 0.1, 'square', 0.1),
+    race: () => tone(300, 0.05, 'square', 0.05)
+  };
+
+  function play(name) {
+    try { sounds[name] && sounds[name](); } catch (e) { /* audio not critical */ }
+  }
+
+  function isEnabled() { return enabled; }
+  function setEnabled(v) {
+    enabled = !!v;
+    Storage.set('sound', enabled);
+  }
+
+  return { play, isEnabled, setEnabled };
+})();
+
+/* ---------------------------------------------------------------------
+   AnimationSetting — global on/off switch respected by every game.
+   Games should check AnimationSetting.isEnabled() before doing long
+   animated sequences and jump straight to the result if it's off.
+   --------------------------------------------------------------------- */
+const AnimationSetting = (() => {
+  let enabled = Storage.get('animation', true);
+  function apply() {
+    document.body.classList.toggle('no-anim', !enabled);
+  }
+  function isEnabled() { return enabled; }
+  function setEnabled(v) {
+    enabled = !!v;
+    Storage.set('animation', enabled);
+    apply();
+  }
+  return { isEnabled, setEnabled, apply };
+})();
+
+/* ---------------------------------------------------------------------
+   ThemeSetting — dark mode is the default; toggling persists.
+   --------------------------------------------------------------------- */
+const ThemeSetting = (() => {
+  let dark = Storage.get('darkMode', true);
+  function apply() {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }
+  function isDark() { return dark; }
+  function setDark(v) {
+    dark = !!v;
+    Storage.set('darkMode', dark);
+    apply();
+  }
+  return { isDark, setDark, apply };
+})();
+
+/* ---------------------------------------------------------------------
+   GameManager — a tiny registry so new games can be added by just
+   dropping a new file in games/ and calling GameManager.register(),
+   without touching any core routing logic.
+   --------------------------------------------------------------------- */
+const GameManager = (() => {
+  const registry = new Map();
+
+  /**
+   * @param {string} id - unique route id, e.g. 'spin-wheel'
+   * @param {Object} def - { title, mount(container), unmount() }
+   */
+  function register(id, def) {
+    registry.set(id, def);
+  }
+
+  function get(id) {
+    return registry.get(id);
+  }
+
+  function list() {
+    return Array.from(registry.values());
+  }
+
+  return { register, get, list };
+})();
+
+/* ---------------------------------------------------------------------
+   ShareUtil — builds the shareable result text/image. Nothing here is
+   ever uploaded: copy-to-clipboard, canvas PNG download, or the native
+   Web Share API (still 100% client-side) are the only three paths out.
+   --------------------------------------------------------------------- */
+const ShareUtil = (() => {
+  const MEDALS = ['🥇', '🥈', '🥉'];
+
+  function buildText(title, results) {
+    const lines = [`🏁 ${title}`, ''];
+    results.forEach((r, i) => {
+      const medal = MEDALS[i] || `${i + 1}.`;
+      lines.push(`${medal} ${r}`);
+    });
+    return lines.join('\n');
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** Renders results onto a canvas and returns the canvas element. */
+  function renderImage(title, results) {
+    const canvas = document.createElement('canvas');
+    const W = 720, lineH = 64;
+    const H = 260 + results.length * lineH;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#14102B');
+    grad.addColorStop(1, '#2E2358');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#4CD9C0';
+    ctx.font = '600 22px "Noto Sans Thai", sans-serif';
+    ctx.fillText('วงแตก · Circle Break', W / 2, 56);
+
+    ctx.fillStyle = '#F1EEFB';
+    ctx.font = '800 34px "Noto Sans Thai", sans-serif';
+    ctx.fillText(`🏁 ${title}`, W / 2, 116);
+
+    results.forEach((r, i) => {
+      const y = 180 + i * lineH;
+      ctx.fillStyle = i === 0 ? '#FFC857' : '#F1EEFB';
+      ctx.font = (i === 0 ? '800 30px' : '600 26px') + ' "Noto Sans Thai", sans-serif';
+      const medal = MEDALS[i] || `${i + 1}.`;
+      ctx.fillText(`${medal}  ${r}`, W / 2, y);
+    });
+
+    return canvas;
+  }
+
+  function downloadCanvas(canvas, filename) {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  async function shareCanvas(canvas, text) {
+    if (!navigator.canShare) return false;
+    try {
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const file = new File([blob], 'circle-break-result.png', { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+        return true;
+      }
+    } catch (e) { /* user cancelled or unsupported */ }
+    return false;
+  }
+
+  return { buildText, copyText, renderImage, downloadCanvas, shareCanvas };
+})();
+
+/* ---------------------------------------------------------------------
+   WinnerFX — the shared "the circle breaks" payoff: a confetti rain
+   plus a burst of gold shards from the winner's name, echoing the
+   break-ring motif from the header. Every game calls this on reveal.
+   --------------------------------------------------------------------- */
+const WinnerFX = (() => {
+  const COLORS = ['#FF6B6B', '#FFC857', '#4CD9C0', '#F1EEFB'];
+
+  function confettiBurst(count = 46) {
+    if (!AnimationSetting.isEnabled()) return;
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    for (let i = 0; i < count; i++) {
+      const piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = COLORS[i % COLORS.length];
+      piece.style.animationDuration = (1.6 + Math.random() * 1.4) + 's';
+      piece.style.animationDelay = (Math.random() * 0.4) + 's';
+      piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+      layer.appendChild(piece);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 3200);
+  }
+
+  /** Bursts small gold shards outward from a target element (e.g. winner name). */
+  function shatterBurst(targetEl, count = 14) {
+    if (!targetEl || !AnimationSetting.isEnabled()) return;
+    targetEl.querySelectorAll('.shard').forEach(s => s.remove());
+    for (let i = 0; i < count; i++) {
+      const shard = document.createElement('span');
+      shard.className = 'shard';
+      const angle = Utils.randomRange(0, Math.PI * 2);
+      const dist = Utils.randomRange(60, 140);
+      shard.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+      shard.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+      shard.style.setProperty('--rot', `${Utils.randomRange(-180, 180)}deg`);
+      targetEl.appendChild(shard);
+    }
+    requestAnimationFrame(() => targetEl.classList.add('shatter-play'));
+    setTimeout(() => targetEl.classList.remove('shatter-play'), 1000);
+  }
+
+  return { confettiBurst, shatterBurst };
+})();
+
+/* ---------------------------------------------------------------------
+   Toast — small transient message, replaces alert().
+   --------------------------------------------------------------------- */
+function showToast(msg, duration = 2200) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+/** Renders the "already picked / eliminated" chip list used by elimination-mode games. */
+function eliminatedPanelHtml(list, label) {
+  if (!list || !list.length) return '';
+  const chips = list.map((n, i) => `<span class="eliminated-chip"><span class="rank">${i + 1}.</span>${Utils.escapeHtml(n)}</span>`).join('');
+  return `<div class="eliminated-panel"><div class="eliminated-title">${label}</div><div class="eliminated-chips">${chips}</div></div>`;
+}
+
+/* ---------------------------------------------------------------------
+   App — router / page shell controller.
+   --------------------------------------------------------------------- */
+const App = (() => {
+  const mainEl = () => document.getElementById('main');
+  const backBtn = () => document.getElementById('backBtn');
+  const headerTitle = () => document.getElementById('headerTitle');
+  const headerTagline = () => document.getElementById('headerTagline');
+  let currentGame = null;
+  let homePlayerInstance = null;
+
+  const HOME_TITLE = 'วงแตก';
+  const HOME_TAGLINE = 'สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง';
+
+  function destroyHomePlayerInstance() {
+    if (homePlayerInstance) { homePlayerInstance.destroy(); homePlayerInstance = null; }
+  }
+
+  function unmountCurrent() {
+    if (currentGame && currentGame.unmount) currentGame.unmount();
+    currentGame = null;
+  }
+
+  function goHome() {
+    unmountCurrent();
+    SoundManager.play('click');
+    renderHome();
+    backBtn().style.display = 'none';
+    headerTitle().textContent = HOME_TITLE;
+    headerTagline().textContent = HOME_TAGLINE;
+    window.scrollTo({ top: 0, behavior: AnimationSetting.isEnabled() ? 'smooth' : 'auto' });
+  }
+
+  function openGame(id) {
+    const game = GameManager.get(id);
+    if (!game) { showToast('ไม่พบเกมนี้'); return; }
+    if (game.requiresPlayers !== false && !PlayerStore.canStartGame()) {
+      showToast(`ต้องมีผู้เล่นอย่างน้อย ${PlayerStore.MIN_PLAYERS} คน`);
+      return;
+    }
+    unmountCurrent();
+    destroyHomePlayerInstance();
+    SoundManager.play('click');
+    mainEl().innerHTML = '';
+    headerTitle().textContent = game.title;
+    headerTagline().textContent = game.tagline || '';
+    backBtn().style.display = 'inline-flex';
+    currentGame = game;
+    game.mount(mainEl());
+    window.scrollTo({ top: 0, behavior: AnimationSetting.isEnabled() ? 'smooth' : 'auto' });
+  }
+
+  function openSubmenu(items, title, tagline) {
+    unmountCurrent();
+    destroyHomePlayerInstance();
+    backBtn().style.display = 'inline-flex';
+    headerTitle().textContent = title;
+    headerTagline().textContent = tagline || '';
+    const grid = document.createElement('div');
+    grid.className = 'menu-grid';
+    items.forEach(item => {
+      const card = document.createElement('button');
+      card.className = 'menu-card glass';
+      card.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${item.label}</span><span class="desc">${item.desc || ''}</span>`;
+      card.addEventListener('click', item.onClick);
+      grid.appendChild(card);
+    });
+    mainEl().innerHTML = '';
+    mainEl().appendChild(grid);
+  }
+
+  function renderHome() {
+    destroyHomePlayerInstance();
+    mainEl().innerHTML = '';
+    mainEl().appendChild(document.getElementById('playerPanelTpl').content.cloneNode(true));
+    homePlayerInstance = PlayerManager.init(mainEl());
+
+    const grid = document.createElement('div');
+    grid.className = 'menu-grid';
+
+    // Settings is reached via the gear icon in the header only (see index.html) —
+    // it isn't a menu card here, so the grid stays focused on the games.
+    const menuItems = [
+      { emoji: '🎲', label: 'Name Picker', desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', onClick: () => openSubmenu([
+          { emoji: '🎡', label: 'Spin Wheel', desc: 'หมุนวงล้อหาผู้ชนะ', onClick: () => openGame('spin-wheel') },
+          { emoji: '🎯', label: 'Random Picker', desc: 'สุ่มชื่อวิ่งไว ๆ', onClick: () => openGame('random-picker') },
+        ], 'Name Picker', 'เลือกวิธีสุ่มที่ชอบ') },
+      { emoji: '🏁', label: 'Race Games', desc: 'แข่งวิ่งลุ้นเส้นชัย', onClick: () => openSubmenu([
+          { emoji: '🏃', label: 'Running Race', desc: 'วิ่งแข่งกันดิบ ๆ', onClick: () => openGame('running-race') },
+          { emoji: '🦆', label: 'Duck Race', desc: 'เป็ดว่ายน้ำ ใครไวกว่า', onClick: () => openGame('duck-race') },
+          { emoji: '🚗', label: 'Car Race', desc: 'ซิ่งรถ nitro ลุ้นกันมัน', onClick: () => openGame('car-race') },
+        ], 'Race Games', 'ทุกเกมยุติธรรม ไม่มีใครได้เปรียบ') },
+      { emoji: '🐊', label: 'Survival Games', desc: 'ผลัดกันกด ใครซวยออกไป', onClick: () => openSubmenu([
+          { emoji: '🐊', label: 'Crocodile Bite', desc: 'งับใครไม่รู้ ลุ้นระทึก', onClick: () => openGame('crocodile-bite') },
+          { emoji: '🦈', label: 'Shark Bite', desc: 'ธีมฉลาม สนุกไม่แพ้กัน', onClick: () => openGame('shark-bite') },
+        ], 'Survival Games', 'ใครโดนงับ คนนั้นออก') },
+    ];
+
+    menuItems.forEach(item => {
+      const card = document.createElement('button');
+      card.className = 'menu-card glass';
+      card.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${item.label}</span><span class="desc">${item.desc}</span>`;
+      card.addEventListener('click', item.onClick);
+      grid.appendChild(card);
+    });
+
+    const heading = document.createElement('div');
+    heading.className = 'section-title';
+    heading.innerHTML = `<span class="eyebrow-tag">เลือกเกม</span>`;
+    mainEl().appendChild(heading);
+    mainEl().appendChild(grid);
+  }
+
+  function init() {
+    ThemeSetting.apply();
+    AnimationSetting.apply();
+    backBtn().addEventListener('click', goHome);
+    renderHome();
+  }
+
+  return { init, goHome, openGame, openSubmenu };
+})();
+
+window.addEventListener('DOMContentLoaded', () => {
+  App.init();
+});
+</script>

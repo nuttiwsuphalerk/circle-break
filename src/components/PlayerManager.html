@@ -1,0 +1,169 @@
+<script>
+/* ==========================================================================
+   PlayerManager — renders and wires up the shared "Players" panel.
+   Refactored to be instance-based: the home screen keeps one panel
+   mounted, and any game can pop open a second, independent instance in
+   a modal via PlayerManager.openModal() without the two ever colliding.
+   ========================================================================== */
+const PlayerManager = (() => {
+
+  function createInstance(root) {
+    function renderList() {
+      const listEl = root.querySelector('#playerList');
+      const players = PlayerStore.getAll();
+      const countLabel = root.querySelector('#playerCountLabel');
+      countLabel.textContent = `${players.length} / ${PlayerStore.MAX_PLAYERS} คน`;
+
+      listEl.innerHTML = '';
+      if (players.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'player-empty';
+        empty.textContent = 'ยังไม่มีผู้เล่น เพิ่มชื่ออย่างน้อย 2 คนเพื่อเริ่มเล่น';
+        listEl.appendChild(empty);
+        return;
+      }
+      players.forEach(name => {
+        const li = document.createElement('li');
+        li.className = 'player-chip';
+        const span = document.createElement('span');
+        span.textContent = name;
+        span.tabIndex = 0;
+        span.setAttribute('role', 'button');
+        span.setAttribute('aria-label', `แก้ไขชื่อ ${name}`);
+        span.addEventListener('click', () => startEdit(name));
+        span.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') startEdit(name); });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '✕';
+        removeBtn.setAttribute('aria-label', `ลบ ${name}`);
+        removeBtn.addEventListener('click', () => {
+          PlayerStore.remove(name);
+          SoundManager.play('click');
+        });
+
+        li.appendChild(span);
+        li.appendChild(removeBtn);
+        listEl.appendChild(li);
+      });
+    }
+
+    function startEdit(name) {
+      const newName = window.prompt('แก้ไขชื่อผู้เล่น', name);
+      if (newName === null) return;
+      const res = PlayerStore.edit(name, newName);
+      if (!res.ok) showToast(res.error);
+    }
+
+    function handleAdd() {
+      const input = root.querySelector('#playerNameInput');
+      const errEl = root.querySelector('#playerFieldError');
+      const res = PlayerStore.add(input.value);
+      if (res.ok) {
+        input.value = '';
+        errEl.textContent = '';
+        SoundManager.play('click');
+      } else {
+        errEl.textContent = res.error;
+      }
+      input.focus();
+    }
+
+    function openImportModal() {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop';
+      backdrop.innerHTML = `
+        <div class="modal glass" role="dialog" aria-modal="true" aria-label="นำเข้ารายชื่อผู้เล่น">
+          <h3>📥 Import รายชื่อ</h3>
+          <p class="modal-hint">วางชื่อทีละบรรทัด หรือคั่นด้วยจุลภาค (,) ระบบจะลบช่องว่างและชื่อซ้ำให้อัตโนมัติ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)<br><b>หมายเหตุ:</b> การนำเข้าจะแทนที่รายชื่อผู้เล่นปัจจุบันทั้งหมด</p>
+          <textarea id="importTextarea" placeholder="A\nB\nC\nD"></textarea>
+          <div class="field-error" id="importError"></div>
+          <div class="btn-row">
+            <button class="btn" id="importConfirmBtn">นำเข้า</button>
+            <button class="btn secondary" id="importCancelBtn">ยกเลิก</button>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
+      backdrop.querySelector('#importCancelBtn').addEventListener('click', () => backdrop.remove());
+      backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+      backdrop.querySelector('#importConfirmBtn').addEventListener('click', () => {
+        const text = backdrop.querySelector('#importTextarea').value;
+        const res = PlayerStore.importList(text);
+        if (!res.ok) {
+          backdrop.querySelector('#importError').textContent = res.error;
+          return;
+        }
+        SoundManager.play('click');
+        showToast(res.skipped > 0 ? `นำเข้า ${res.count} ชื่อ (ตัดชื่อซ้ำ ${res.skipped} ชื่อ)` : `นำเข้า ${res.count} ชื่อสำเร็จ`);
+        backdrop.remove();
+      });
+      backdrop.querySelector('#importTextarea').focus();
+    }
+
+    function confirmClear() {
+      if (PlayerStore.count() === 0) return;
+      if (window.confirm('ล้างรายชื่อผู้เล่นทั้งหมด?')) {
+        PlayerStore.clear();
+        SoundManager.play('click');
+      }
+    }
+
+    renderList();
+    const unsubscribe = PlayerStore.onChange(renderList);
+
+    root.querySelector('#playerAddBtn').addEventListener('click', handleAdd);
+    root.querySelector('#playerNameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleAdd();
+    });
+    root.querySelector('#playerShuffleBtn').addEventListener('click', () => {
+      if (PlayerStore.count() < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+      PlayerStore.shuffle();
+      SoundManager.play('click');
+      showToast('สลับลำดับผู้เล่นแล้ว');
+    });
+    root.querySelector('#playerImportBtn').addEventListener('click', openImportModal);
+    root.querySelector('#playerClearBtn').addEventListener('click', confirmClear);
+
+    return { destroy: unsubscribe };
+  }
+
+  function init(container) {
+    return createInstance(container);
+  }
+
+  /** Pops open a self-contained "edit players" modal, usable from any game. */
+  function openModal() {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    const modal = document.createElement('div');
+    modal.className = 'modal glass';
+    modal.style.maxWidth = '480px';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'แก้ไขผู้เล่น');
+    modal.innerHTML = `<h3>👥 แก้ไข / เพิ่มชื่อผู้เล่น</h3>`;
+
+    const panel = document.getElementById('playerPanelTpl').content.cloneNode(true);
+    modal.appendChild(panel);
+
+    const closeRow = document.createElement('div');
+    closeRow.className = 'btn-row';
+    closeRow.style.marginTop = '6px';
+    closeRow.innerHTML = `<button class="btn secondary" id="playerModalCloseBtn">ปิด</button>`;
+    modal.appendChild(closeRow);
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    const instance = createInstance(modal);
+
+    function close() {
+      instance.destroy();
+      backdrop.remove();
+    }
+    modal.querySelector('#playerModalCloseBtn').addEventListener('click', close);
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+  }
+
+  return { init, openModal };
+})();
+</script>

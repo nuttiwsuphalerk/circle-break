@@ -1,0 +1,181 @@
+<script>
+/* ==========================================================================
+   Game: Spin Wheel — divides the wheel into one slice per player,
+   picks the winner with Math.random() FIRST, then animates the wheel
+   to land on that pre-chosen slice so the visual is always honest.
+
+   Elimination mode (optional, via the gear button): once a name wins,
+   it's removed from the pool for the next spin. The "eliminated" list
+   is derived from PlayerStore + an in-memory winners list, so adding,
+   editing, or removing players mid-session never gets out of sync.
+   ========================================================================== */
+(function registerSpinWheel() {
+  let spinning = false;
+  let currentRotation = 0;
+  let eliminationOn = false;
+  let pickedList = []; // names already won & removed from the pool, in draw order
+
+  function pool() {
+    const all = PlayerStore.getAll();
+    pickedList = pickedList.filter(n => all.includes(n)); // prune deleted players
+    const picked = new Set(pickedList);
+    return all.filter(n => !picked.has(n));
+  }
+
+  function activePlayers() {
+    return eliminationOn ? pool() : PlayerStore.getAll();
+  }
+
+  function colorFor(i, n) {
+    const hue = (i * (360 / n) + 260) % 360;
+    return `hsl(${hue} 62% 54%)`;
+  }
+
+  function buildWheelSvg(players) {
+    const n = players.length;
+    const size = 360, r = size / 2, cx = r, cy = r;
+    const sliceAngle = 360 / n;
+    const showLabels = n <= 24;
+    let paths = '';
+    for (let i = 0; i < n; i++) {
+      const startA = (i * sliceAngle - 90) * Math.PI / 180;
+      const endA = ((i + 1) * sliceAngle - 90) * Math.PI / 180;
+      const x1 = cx + r * Math.cos(startA), y1 = cy + r * Math.sin(startA);
+      const x2 = cx + r * Math.cos(endA), y2 = cy + r * Math.sin(endA);
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+      paths += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${colorFor(i, n)}" stroke="#14102B" stroke-width="1.5"/>`;
+      if (showLabels) {
+        const midA = (i * sliceAngle + sliceAngle / 2 - 90) * Math.PI / 180;
+        const tx = cx + (r * 0.64) * Math.cos(midA);
+        const ty = cy + (r * 0.64) * Math.sin(midA);
+        const rotDeg = (i * sliceAngle + sliceAngle / 2);
+        const label = players[i].length > 10 ? players[i].slice(0, 9) + '…' : players[i];
+        const fontSize = n > 16 ? 13 : n > 8 ? 16 : 19;
+        paths += `<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" fill="#14102B" font-size="${fontSize}" font-weight="800" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#ffffff" stroke-width="2.5" stroke-opacity="0.28" transform="rotate(${rotDeg.toFixed(1)} ${tx.toFixed(2)} ${ty.toFixed(2)})">${Utils.escapeHtml(label)}</text>`;
+      }
+    }
+    const hubR = r * 0.13;
+    return `<svg viewBox="0 0 ${size} ${size}" id="wheelSvg">${paths}
+      <circle cx="${cx}" cy="${cy}" r="${hubR.toFixed(2)}" fill="#F1EEFB" stroke="#FFC857" stroke-width="4"/>
+      <circle cx="${(cx - hubR * 0.3).toFixed(2)}" cy="${(cy - hubR * 0.3).toFixed(2)}" r="${(hubR * 0.35).toFixed(2)}" fill="#ffffff" opacity="0.55"/>
+    </svg>`;
+  }
+
+  function openGearSettings(container) {
+    GameSettingsUtil.openModal({
+      title: 'Spin Wheel',
+      elimination: {
+        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        on: eliminationOn,
+        eliminatedList: pickedList,
+        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        onToggle: (next) => {
+          eliminationOn = next;
+          if (next) pickedList = [];
+          buildStage(container);
+        }
+      }
+    });
+  }
+
+  function buildStage(container) {
+    spinning = false;
+    currentRotation = 0;
+    let players = activePlayers();
+
+    if (eliminationOn && players.length === 1) {
+      pickedList.push(players[0]); // sole survivor is automatically the last winner
+      players = activePlayers();
+    }
+
+    if (eliminationOn && players.length === 0) {
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
+          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" id="wheelResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+          </div>
+        </section>`;
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      container.querySelector('#wheelResetElimBtn').addEventListener('click', () => { pickedList = []; buildStage(container); });
+      return;
+    }
+
+    container.innerHTML = `
+      <section class="glass game-stage">
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          ${buildWheelSvg(players)}
+        </div>
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="spinBtn">🎡 หมุนวงล้อ</button>
+        </div>
+        <div id="wheelResult" style="margin-top:10px"></div>
+      </section>`;
+
+    const stage = container.querySelector('.game-stage');
+    GameSettingsUtil.attachGearButton(stage, () => openGearSettings(container));
+    container.querySelector('#spinBtn').addEventListener('click', () => spin(container));
+  }
+
+  function mount(container) {
+    eliminationOn = false;
+    pickedList = [];
+    buildStage(container);
+  }
+
+  function spin(container) {
+    if (spinning) return;
+    const players = activePlayers();
+    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+    spinning = true;
+
+    const winnerIndex = Utils.randomIndex(players.length);
+    const n = players.length;
+    const sliceAngle = 360 / n;
+    const sliceCenter = winnerIndex * sliceAngle + sliceAngle / 2;
+    const spins = 5 + Math.floor(Math.random() * 6); // 5-10 full rotations
+    const targetWithinTurn = (360 - sliceCenter) % 360;
+    const finalRotation = currentRotation - (currentRotation % 360) + spins * 360 + targetWithinTurn;
+    currentRotation = finalRotation;
+
+    const svg = container.querySelector('#wheelSvg');
+    const duration = AnimationSetting.isEnabled() ? 4.6 : 0.05;
+    svg.style.transition = `transform ${duration}s cubic-bezier(.12,.68,.18,1)`;
+    svg.style.transform = `rotate(${finalRotation}deg)`;
+
+    const tickInterval = AnimationSetting.isEnabled() ? setInterval(() => SoundManager.play('countdown'), 260) : null;
+
+    setTimeout(() => {
+      if (tickInterval) clearInterval(tickInterval);
+      spinning = false;
+      SoundManager.play('winner');
+      const winnerName = players[winnerIndex];
+      if (eliminationOn) pickedList.push(winnerName);
+
+      const resultEl = container.querySelector('#wheelResult');
+      resultEl.innerHTML = `
+        <div class="shatter-wrap">
+          <div class="winner-name">🏆 ${Utils.escapeHtml(winnerName)}</div>
+        </div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="playAgainBtn">🔁 Play Again</button>
+          <button class="btn secondary" id="wheelShareBtn">📤 Share Result</button>
+        </div>`;
+      WinnerFX.confettiBurst();
+      WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
+      resultEl.querySelector('#playAgainBtn').addEventListener('click', () => buildStage(container));
+      resultEl.querySelector('#wheelShareBtn').addEventListener('click', () => ShareResult.open('Spin Wheel', [winnerName]));
+    }, duration * 1000 + 80);
+  }
+
+  GameManager.register('spin-wheel', {
+    title: 'Spin Wheel',
+    tagline: 'หมุนวงล้อ ใครจะเป็นผู้ถูกเลือก',
+    mount,
+    unmount() { spinning = false; }
+  });
+})();
+</script>

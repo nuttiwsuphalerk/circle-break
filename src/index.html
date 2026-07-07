@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('css') ?>
+  <!--
+    Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your real publisher ID
+    (AdSense > Account > Settings > Account information) once approved.
+    Remove this whole <script> tag if you decide against ads later.
+  -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <button id="backBtn" class="back-btn" style="display:none" aria-label="กลับหน้าแรก">← กลับ</button>
+      <button id="settingsShortcut" class="icon-btn" aria-label="ตั้งค่า" title="ตั้งค่า">⚙</button>
+      <div class="break-ring" aria-hidden="true"></div>
+      <span class="eyebrow">PARTY MINI GAME</span>
+      <h1 id="headerTitle">วงแตก</h1>
+      <p class="tagline" id="headerTagline">สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง</p>
+    </header>
+
+    <main id="main"></main>
+
+    <!--
+      Single, non-intrusive ad slot — deliberately placed BELOW all game
+      content (never next to buttons/teeth/wheel controls) to avoid
+      accidental clicks and stay within AdSense's placement policies.
+      Replace data-ad-client / data-ad-slot with your real IDs.
+    -->
+    <div class="ad-slot">
+      <span class="ad-slot-label">โฆษณา</span>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="XXXXXXXXXX"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+    <script>
+      try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { /* blocked or not yet approved — fine to ignore */ }
+    </script>
+
+    <footer>
+      <div>ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น</div>
+      <div class="credit">
+        เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้ —
+        <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">ดูวิธีที่ Google ใช้ข้อมูลโฆษณา</a>
+      </div>
+      <div class="credit">จัดทำโดย Nuttiw Suphalerk</div>
+    </footer>
+  </div>
+
+  <!-- Shared player roster panel markup, hydrated by PlayerManager.init() -->
+  <template id="playerPanelTpl">
+    <section class="glass player-panel" aria-label="รายชื่อผู้เล่น">
+      <div class="section-title" style="margin-top:0">
+        <span class="eyebrow-tag">Players</span>
+        <span id="playerCountLabel" class="player-count" style="margin:0"></span>
+      </div>
+      <div class="player-input-row">
+        <label class="visually-hidden" for="playerNameInput">เพิ่มชื่อผู้เล่น</label>
+        <input id="playerNameInput" type="text" placeholder="พิมพ์ชื่อแล้วกด Enter…" maxlength="24" autocomplete="off">
+        <button id="playerAddBtn" class="btn">+ เพิ่ม</button>
+      </div>
+      <div class="field-error" id="playerFieldError"></div>
+      <ul class="player-list" id="playerList"></ul>
+      <div class="player-toolbar">
+        <button id="playerShuffleBtn" class="btn secondary">🔀 Shuffle</button>
+        <button id="playerImportBtn" class="btn secondary">📥 Import</button>
+        <button id="playerClearBtn" class="btn ghost">🗑 Clear all</button>
+      </div>
+    </section>
+  </template>
+
+  <?!= include('components/PlayerManager') ?>
+  <?!= include('components/ShareResult') ?>
+  <?!= include('components/GameSettings') ?>
+  <?!= include('js') ?>
+  <?!= include('games/SpinWheel') ?>
+  <?!= include('games/RandomPicker') ?>
+  <?!= include('games/RaceEngine') ?>
+  <?!= include('games/BiteGame') ?>
+  <?!= include('components/SettingsPanel') ?>
+</body>
+</html>

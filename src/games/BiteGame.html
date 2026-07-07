@@ -1,0 +1,223 @@
+<script>
+/* ==========================================================================
+   Game: Bite Game — Crocodile Bite and Shark Bite share the exact same
+   mechanic: one of 16 teeth is secretly the "bad" tooth, chosen fairly
+   with Math.random() before anyone plays, and players take turns
+   pressing teeth until someone presses the bad one.
+
+   Elimination mode (gear button): the loser sits out future rounds
+   until only one survivor remains. Timer (gear button): each turn gets
+   a countdown; if nobody presses in time, a random untouched tooth is
+   pressed automatically to keep the party moving.
+   ========================================================================== */
+(function registerBiteGames() {
+  const TEETH_COUNT = 16;
+  const THEMES = {
+    'crocodile-bite': { title: 'Crocodile Bite', tagline: 'ผลัดกันกด ระวังโดนงับ', emoji: '🐊', biteWord: 'งับ!' },
+    'shark-bite': { title: 'Shark Bite', tagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน', emoji: '🦈', biteWord: 'ฉลามงับ!' }
+  };
+
+  function buildGame(themeId) {
+    const theme = THEMES[themeId];
+    let badToothIndex = -1;
+    let turnIndex = 0;
+    let pressed = [];
+    let gameOver = false;
+    let playersRef = [];
+    let activeToken = 0;
+    let eliminationOn = false;
+    let outList = []; // losers so far, in the order they were eliminated
+    let timerOn = false;
+    let timerSeconds = 10;
+    let countdownId = null;
+
+    function survivors() {
+      const all = PlayerStore.getAll();
+      outList = outList.filter(n => all.includes(n)); // prune deleted players
+      const out = new Set(outList);
+      return all.filter(n => !out.has(n));
+    }
+
+    function rosterForRound() {
+      return eliminationOn ? survivors() : PlayerStore.getAll();
+    }
+
+    function clearCountdown() {
+      if (countdownId) { clearInterval(countdownId); countdownId = null; }
+    }
+
+    function startTurnCountdown(container) {
+      clearCountdown();
+      if (!timerOn || gameOver) return;
+      let remaining = timerSeconds;
+      const badge = container.querySelector('#biteTimerBadge');
+      if (badge) badge.textContent = `⏱ ${remaining}s`;
+      countdownId = setInterval(() => {
+        remaining -= 1;
+        const b = container.querySelector('#biteTimerBadge');
+        if (b) b.textContent = `⏱ ${Math.max(remaining, 0)}s`;
+        if (remaining <= 0) {
+          clearCountdown();
+          autoPress(container);
+        }
+      }, 1000);
+    }
+
+    function autoPress(container) {
+      const untouched = pressed.map((p, i) => p ? -1 : i).filter(i => i !== -1);
+      if (untouched.length === 0 || gameOver) return;
+      const i = untouched[Utils.randomIndex(untouched.length)];
+      handlePress(container, i);
+    }
+
+    function setup() {
+      activeToken++;
+      badToothIndex = Utils.randomIndex(TEETH_COUNT);
+      turnIndex = 0;
+      pressed = new Array(TEETH_COUNT).fill(false);
+      gameOver = false;
+      playersRef = Utils.fisherYates(rosterForRound().slice());
+    }
+
+    function openGearSettings(container) {
+      GameSettingsUtil.openModal({
+        title: theme.title,
+        elimination: {
+          label: '🏅 ตัดผู้แพ้ออกจากรอบถัดไป',
+          on: eliminationOn,
+          eliminatedList: outList,
+          eliminatedListLabel: 'รายชื่อที่ออกไปแล้ว',
+          onToggle: (next) => { eliminationOn = next; if (next) outList = []; render(container); }
+        },
+        timer: {
+          label: '⏱ ตั้งเวลาต่อตา',
+          on: timerOn,
+          seconds: timerSeconds,
+          onToggle: (next) => { timerOn = next; render(container); startTurnCountdown(container); },
+          onSeconds: (v) => { timerSeconds = v; render(container); startTurnCountdown(container); }
+        }
+      });
+    }
+
+    function mount(container) {
+      eliminationOn = false;
+      outList = [];
+      timerOn = false;
+      clearCountdown();
+      newRound(container);
+    }
+
+    function newRound(container) {
+      if (eliminationOn && survivors().length < 2) {
+        const msg = survivors().length === 1
+          ? `🏆 ผู้รอดชีวิตคนสุดท้าย: <b>${Utils.escapeHtml(survivors()[0])}</b>`
+          : '🎉 จบเกมแล้ว!';
+        container.innerHTML = `
+          <section class="glass game-stage">
+            <div class="winner-name">${msg}</div>
+            ${eliminatedPanelHtml(outList, 'ลำดับผู้ที่ออกไปแล้ว')}
+            <div class="btn-row" style="justify-content:center">
+              <button class="btn" id="biteResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            </div>
+          </section>`;
+        GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+        container.querySelector('#biteResetElimBtn').addEventListener('click', () => { outList = []; newRound(container); });
+        return;
+      }
+      setup();
+      render(container);
+      startTurnCountdown(container);
+    }
+
+    function render(container) {
+      container.innerHTML = `
+        <section class="glass game-stage">
+          <div class="bite-jaw">
+            <div style="font-size:2.6rem">${theme.emoji}</div>
+            ${timerOn ? '<div class="timer-badge" id="biteTimerBadge">⏱ ' + timerSeconds + 's</div>' : ''}
+            <div class="turn-banner" id="turnBanner"></div>
+            <div class="teeth-grid" id="teethGrid"></div>
+          </div>
+          ${eliminationOn ? eliminatedPanelHtml(outList, 'รายชื่อที่ออกไปแล้ว') : ''}
+          <div id="biteResult"></div>
+        </section>`;
+
+      GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
+      renderTurnBanner(container);
+      const grid = container.querySelector('#teethGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < TEETH_COUNT; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'tooth';
+        btn.setAttribute('aria-label', `ซี่ฟันที่ ${i + 1}`);
+        btn.disabled = pressed[i];
+        btn.textContent = pressed[i] ? '✕' : '🦷';
+        btn.addEventListener('click', () => handlePress(container, i));
+        grid.appendChild(btn);
+      }
+    }
+
+    function renderTurnBanner(container) {
+      const banner = container.querySelector('#turnBanner');
+      if (banner && !gameOver) {
+        banner.textContent = `ตาของ: ${playersRef[turnIndex]}`;
+      }
+    }
+
+    function handlePress(container, i) {
+      if (gameOver || pressed[i]) return;
+      pressed[i] = true;
+      const currentPlayer = playersRef[turnIndex];
+      const myToken = ++activeToken;
+      clearCountdown();
+      SoundManager.play('click');
+
+      const grid = container.querySelector('#teethGrid');
+      const btn = grid.children[i];
+
+      if (i === badToothIndex) {
+        btn.classList.add('bad');
+        btn.textContent = theme.emoji;
+        gameOver = true;
+        SoundManager.play('lose');
+        Array.from(grid.children).forEach(b => b.disabled = true);
+        setTimeout(() => {
+          if (myToken !== activeToken) return;
+          showGameOver(container, currentPlayer);
+        }, 450);
+      } else {
+        btn.textContent = '✕';
+        turnIndex = (turnIndex + 1) % playersRef.length;
+        renderTurnBanner(container);
+        startTurnCountdown(container);
+      }
+    }
+
+    function showGameOver(container, loser) {
+      if (eliminationOn) outList.push(loser);
+      const resultEl = container.querySelector('#biteResult');
+      resultEl.innerHTML = `
+        <div class="shatter-wrap">
+          <div class="winner-name" style="color:var(--coral-pop)">💥 GAME OVER</div>
+        </div>
+        <p style="margin:6px 0 16px;font-size:1.1rem">${theme.biteWord} <b>${Utils.escapeHtml(loser)}</b> ออกจากเกม!</p>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="biteRestartBtn">🔁 ${eliminationOn ? 'รอบต่อไป' : 'Restart'}</button>
+          <button class="btn secondary" id="biteShareBtn">📤 Share Result</button>
+        </div>`;
+      WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
+      container.querySelector('#biteRestartBtn').addEventListener('click', () => newRound(container));
+      container.querySelector('#biteShareBtn').addEventListener('click', () => ShareResult.open(theme.title, [`${loser} (ผู้แพ้)`]));
+    }
+
+    return {
+      title: theme.title,
+      tagline: theme.tagline,
+      mount,
+      unmount() { gameOver = true; activeToken++; clearCountdown(); }
+    };
+  }
+
+  Object.keys(THEMES).forEach(id => GameManager.register(id, buildGame(id)));
+})();
+</script>

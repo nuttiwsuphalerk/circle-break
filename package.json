@@ -1,0 +1,9 @@
+{
+  "name": "circle-break-web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "วงแตก (Circle Break) — static build for Cloudflare Pages / GitHub Pages / Netlify.",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
