@@ -15,13 +15,13 @@ const ShareResult = (() => {
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.innerHTML = `
-      <div class="modal glass" role="dialog" aria-modal="true" aria-label="แชร์ผลการแข่งขัน">
+      <div class="modal glass" role="dialog" aria-modal="true" aria-label="${I18n.t('share.aria')}">
         <h3>📤 Share Result</h3>
         <div class="share-preview">${Utils.escapeHtml(text)}</div>
         <div class="btn-row">
           <button class="btn" id="shareCopyBtn">📋 Copy Text</button>
           <button class="btn secondary" id="shareImageBtn">🖼 Generate Image</button>
-          <button class="btn ghost" id="shareCloseBtn">ปิด</button>
+          <button class="btn ghost" id="shareCloseBtn">${I18n.t('common.close')}</button>
         </div>
       </div>`;
     document.body.appendChild(backdrop);
@@ -31,7 +31,7 @@ const ShareResult = (() => {
 
     backdrop.querySelector('#shareCopyBtn').addEventListener('click', async () => {
       const ok = await ShareUtil.copyText(text);
-      showToast(ok ? 'คัดลอกข้อความแล้ว ✅' : 'คัดลอกไม่สำเร็จ');
+      showToast(ok ? I18n.t('share.copied') : I18n.t('share.copyFailed'));
     });
 
     backdrop.querySelector('#shareImageBtn').addEventListener('click', async () => {
@@ -39,7 +39,7 @@ const ShareResult = (() => {
       const shared = await ShareUtil.shareCanvas(canvas, text);
       if (!shared) {
         ShareUtil.downloadCanvas(canvas, 'circle-break-result.png');
-        showToast('บันทึกรูปภาพแล้ว ✅');
+        showToast(I18n.t('share.imageSaved'));
       }
     });
   }

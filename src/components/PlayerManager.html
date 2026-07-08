@@ -8,17 +8,28 @@
 const PlayerManager = (() => {
 
   function createInstance(root) {
+    function localizeStaticPanel() {
+      const panel = root.querySelector('.player-panel');
+      if (panel) panel.setAttribute('aria-label', I18n.t('player.panelAria'));
+      const label = root.querySelector('label[for="playerNameInput"]');
+      if (label) label.textContent = I18n.t('player.addNameLabel');
+      const input = root.querySelector('#playerNameInput');
+      if (input) input.placeholder = I18n.t('player.addNamePlaceholder');
+      const addBtn = root.querySelector('#playerAddBtn');
+      if (addBtn) addBtn.textContent = I18n.t('player.addBtn');
+    }
+
     function renderList() {
       const listEl = root.querySelector('#playerList');
       const players = PlayerStore.getAll();
       const countLabel = root.querySelector('#playerCountLabel');
-      countLabel.textContent = `${players.length} / ${PlayerStore.MAX_PLAYERS} คน`;
+      countLabel.textContent = I18n.t('player.countLabel', { count: players.length, max: PlayerStore.MAX_PLAYERS });
 
       listEl.innerHTML = '';
       if (players.length === 0) {
         const empty = document.createElement('li');
         empty.className = 'player-empty';
-        empty.textContent = 'ยังไม่มีผู้เล่น เพิ่มชื่ออย่างน้อย 2 คนเพื่อเริ่มเล่น';
+        empty.textContent = I18n.t('player.emptyState');
         listEl.appendChild(empty);
         return;
       }
@@ -29,13 +40,13 @@ const PlayerManager = (() => {
         span.textContent = name;
         span.tabIndex = 0;
         span.setAttribute('role', 'button');
-        span.setAttribute('aria-label', `แก้ไขชื่อ ${name}`);
+        span.setAttribute('aria-label', I18n.t('player.editAria', { name }));
         span.addEventListener('click', () => startEdit(name));
         span.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') startEdit(name); });
 
         const removeBtn = document.createElement('button');
         removeBtn.innerHTML = '✕';
-        removeBtn.setAttribute('aria-label', `ลบ ${name}`);
+        removeBtn.setAttribute('aria-label', I18n.t('player.removeAria', { name }));
         removeBtn.addEventListener('click', () => {
           PlayerStore.remove(name);
           SoundManager.play('click');
@@ -48,7 +59,7 @@ const PlayerManager = (() => {
     }
 
     function startEdit(name) {
-      const newName = window.prompt('แก้ไขชื่อผู้เล่น', name);
+      const newName = window.prompt(I18n.t('player.editPrompt'), name);
       if (newName === null) return;
       const res = PlayerStore.edit(name, newName);
       if (!res.ok) showToast(res.error);
@@ -72,14 +83,14 @@ const PlayerManager = (() => {
       const backdrop = document.createElement('div');
       backdrop.className = 'modal-backdrop';
       backdrop.innerHTML = `
-        <div class="modal glass" role="dialog" aria-modal="true" aria-label="นำเข้ารายชื่อผู้เล่น">
-          <h3>📥 Import รายชื่อ</h3>
-          <p class="modal-hint">วางชื่อทีละบรรทัด หรือคั่นด้วยจุลภาค (,) ระบบจะลบช่องว่างและชื่อซ้ำให้อัตโนมัติ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)<br><b>หมายเหตุ:</b> การนำเข้าจะแทนที่รายชื่อผู้เล่นปัจจุบันทั้งหมด</p>
+        <div class="modal glass" role="dialog" aria-modal="true" aria-label="${I18n.t('player.importAria')}">
+          <h3>${I18n.t('player.importTitle')}</h3>
+          <p class="modal-hint">${I18n.t('player.importHint')}</p>
           <textarea id="importTextarea" placeholder="A\nB\nC\nD"></textarea>
           <div class="field-error" id="importError"></div>
           <div class="btn-row">
-            <button class="btn" id="importConfirmBtn">นำเข้า</button>
-            <button class="btn secondary" id="importCancelBtn">ยกเลิก</button>
+            <button class="btn" id="importConfirmBtn">${I18n.t('common.import')}</button>
+            <button class="btn secondary" id="importCancelBtn">${I18n.t('common.cancel')}</button>
           </div>
         </div>`;
       document.body.appendChild(backdrop);
@@ -93,7 +104,7 @@ const PlayerManager = (() => {
           return;
         }
         SoundManager.play('click');
-        showToast(res.skipped > 0 ? `นำเข้า ${res.count} ชื่อ (ตัดชื่อซ้ำ ${res.skipped} ชื่อ)` : `นำเข้า ${res.count} ชื่อสำเร็จ`);
+        showToast(res.skipped > 0 ? I18n.t('player.importedWithSkipped', { count: res.count, skipped: res.skipped }) : I18n.t('player.importedSuccess', { count: res.count }));
         backdrop.remove();
       });
       backdrop.querySelector('#importTextarea').focus();
@@ -101,13 +112,14 @@ const PlayerManager = (() => {
 
     function confirmClear() {
       if (PlayerStore.count() === 0) return;
-      if (window.confirm('ล้างรายชื่อผู้เล่นทั้งหมด?')) {
+      if (window.confirm(I18n.t('player.confirmClearAll'))) {
         PlayerStore.clear();
         SoundManager.play('click');
       }
     }
 
     renderList();
+    localizeStaticPanel();
     const unsubscribe = PlayerStore.onChange(renderList);
 
     root.querySelector('#playerAddBtn').addEventListener('click', handleAdd);
@@ -115,10 +127,10 @@ const PlayerManager = (() => {
       if (e.key === 'Enter') handleAdd();
     });
     root.querySelector('#playerShuffleBtn').addEventListener('click', () => {
-      if (PlayerStore.count() < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+      if (PlayerStore.count() < 2) { showToast(I18n.t('common.needMinPlayers', { n: 2 })); return; }
       PlayerStore.shuffle();
       SoundManager.play('click');
-      showToast('สลับลำดับผู้เล่นแล้ว');
+      showToast(I18n.t('player.shuffled'));
     });
     root.querySelector('#playerImportBtn').addEventListener('click', openImportModal);
     root.querySelector('#playerClearBtn').addEventListener('click', confirmClear);
@@ -139,8 +151,8 @@ const PlayerManager = (() => {
     modal.style.maxWidth = '480px';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', 'แก้ไขผู้เล่น');
-    modal.innerHTML = `<h3>👥 แก้ไข / เพิ่มชื่อผู้เล่น</h3>`;
+    modal.setAttribute('aria-label', I18n.t('player.editModalAria'));
+    modal.innerHTML = `<h3>${I18n.t('player.editModalTitle')}</h3>`;
 
     const panel = document.getElementById('playerPanelTpl').content.cloneNode(true);
     modal.appendChild(panel);
@@ -148,7 +160,7 @@ const PlayerManager = (() => {
     const closeRow = document.createElement('div');
     closeRow.className = 'btn-row';
     closeRow.style.marginTop = '6px';
-    closeRow.innerHTML = `<button class="btn secondary" id="playerModalCloseBtn">ปิด</button>`;
+    closeRow.innerHTML = `<button class="btn secondary" id="playerModalCloseBtn">${I18n.t('common.close')}</button>`;
     modal.appendChild(closeRow);
 
     backdrop.appendChild(modal);

@@ -196,6 +196,9 @@
   }
   .icon-btn:hover{ transform:rotate(20deg); }
 
+  #langToggleBtn{ right:72px; font-size:.8rem; }
+  #langToggleBtn:hover{ transform:scale(1.08); }
+
   .game-gear-btn{
     position:absolute; top:14px; right:14px;
     background:var(--surface); border:1px solid var(--border);
@@ -797,6 +800,7 @@
   <div id="app">
     <header class="app-header">
       <button id="backBtn" class="back-btn" style="display:none" aria-label="กลับหน้าแรก">← กลับ</button>
+      <button id="langToggleBtn" class="icon-btn" aria-label="เปลี่ยนภาษา" title="เปลี่ยนภาษา" style="font-size:.8rem; font-weight:700">EN</button>
       <button id="settingsShortcut" class="icon-btn" aria-label="ตั้งค่า" title="ตั้งค่า">⚙</button>
       <div class="break-ring" aria-hidden="true"></div>
       <span class="eyebrow">PARTY MINI GAME</span>
@@ -826,8 +830,8 @@
     </script>
 
     <footer>
-      <div>ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น</div>
-      <div class="credit">
+      <div id="footerPrivacyNote">ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น</div>
+      <div class="credit" id="footerAdsCredit">
         เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้ —
         <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">ดูวิธีที่ Google ใช้ข้อมูลโฆษณา</a>
       </div>
@@ -867,17 +871,28 @@
 const PlayerManager = (() => {
 
   function createInstance(root) {
+    function localizeStaticPanel() {
+      const panel = root.querySelector('.player-panel');
+      if (panel) panel.setAttribute('aria-label', I18n.t('player.panelAria'));
+      const label = root.querySelector('label[for="playerNameInput"]');
+      if (label) label.textContent = I18n.t('player.addNameLabel');
+      const input = root.querySelector('#playerNameInput');
+      if (input) input.placeholder = I18n.t('player.addNamePlaceholder');
+      const addBtn = root.querySelector('#playerAddBtn');
+      if (addBtn) addBtn.textContent = I18n.t('player.addBtn');
+    }
+
     function renderList() {
       const listEl = root.querySelector('#playerList');
       const players = PlayerStore.getAll();
       const countLabel = root.querySelector('#playerCountLabel');
-      countLabel.textContent = `${players.length} / ${PlayerStore.MAX_PLAYERS} คน`;
+      countLabel.textContent = I18n.t('player.countLabel', { count: players.length, max: PlayerStore.MAX_PLAYERS });
 
       listEl.innerHTML = '';
       if (players.length === 0) {
         const empty = document.createElement('li');
         empty.className = 'player-empty';
-        empty.textContent = 'ยังไม่มีผู้เล่น เพิ่มชื่ออย่างน้อย 2 คนเพื่อเริ่มเล่น';
+        empty.textContent = I18n.t('player.emptyState');
         listEl.appendChild(empty);
         return;
       }
@@ -888,13 +903,13 @@ const PlayerManager = (() => {
         span.textContent = name;
         span.tabIndex = 0;
         span.setAttribute('role', 'button');
-        span.setAttribute('aria-label', `แก้ไขชื่อ ${name}`);
+        span.setAttribute('aria-label', I18n.t('player.editAria', { name }));
         span.addEventListener('click', () => startEdit(name));
         span.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') startEdit(name); });
 
         const removeBtn = document.createElement('button');
         removeBtn.innerHTML = '✕';
-        removeBtn.setAttribute('aria-label', `ลบ ${name}`);
+        removeBtn.setAttribute('aria-label', I18n.t('player.removeAria', { name }));
         removeBtn.addEventListener('click', () => {
           PlayerStore.remove(name);
           SoundManager.play('click');
@@ -907,7 +922,7 @@ const PlayerManager = (() => {
     }
 
     function startEdit(name) {
-      const newName = window.prompt('แก้ไขชื่อผู้เล่น', name);
+      const newName = window.prompt(I18n.t('player.editPrompt'), name);
       if (newName === null) return;
       const res = PlayerStore.edit(name, newName);
       if (!res.ok) showToast(res.error);
@@ -931,14 +946,14 @@ const PlayerManager = (() => {
       const backdrop = document.createElement('div');
       backdrop.className = 'modal-backdrop';
       backdrop.innerHTML = `
-        <div class="modal glass" role="dialog" aria-modal="true" aria-label="นำเข้ารายชื่อผู้เล่น">
-          <h3>📥 Import รายชื่อ</h3>
-          <p class="modal-hint">วางชื่อทีละบรรทัด หรือคั่นด้วยจุลภาค (,) ระบบจะลบช่องว่างและชื่อซ้ำให้อัตโนมัติ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)<br><b>หมายเหตุ:</b> การนำเข้าจะแทนที่รายชื่อผู้เล่นปัจจุบันทั้งหมด</p>
+        <div class="modal glass" role="dialog" aria-modal="true" aria-label="${I18n.t('player.importAria')}">
+          <h3>${I18n.t('player.importTitle')}</h3>
+          <p class="modal-hint">${I18n.t('player.importHint')}</p>
           <textarea id="importTextarea" placeholder="A\nB\nC\nD"></textarea>
           <div class="field-error" id="importError"></div>
           <div class="btn-row">
-            <button class="btn" id="importConfirmBtn">นำเข้า</button>
-            <button class="btn secondary" id="importCancelBtn">ยกเลิก</button>
+            <button class="btn" id="importConfirmBtn">${I18n.t('common.import')}</button>
+            <button class="btn secondary" id="importCancelBtn">${I18n.t('common.cancel')}</button>
           </div>
         </div>`;
       document.body.appendChild(backdrop);
@@ -952,7 +967,7 @@ const PlayerManager = (() => {
           return;
         }
         SoundManager.play('click');
-        showToast(res.skipped > 0 ? `นำเข้า ${res.count} ชื่อ (ตัดชื่อซ้ำ ${res.skipped} ชื่อ)` : `นำเข้า ${res.count} ชื่อสำเร็จ`);
+        showToast(res.skipped > 0 ? I18n.t('player.importedWithSkipped', { count: res.count, skipped: res.skipped }) : I18n.t('player.importedSuccess', { count: res.count }));
         backdrop.remove();
       });
       backdrop.querySelector('#importTextarea').focus();
@@ -960,13 +975,14 @@ const PlayerManager = (() => {
 
     function confirmClear() {
       if (PlayerStore.count() === 0) return;
-      if (window.confirm('ล้างรายชื่อผู้เล่นทั้งหมด?')) {
+      if (window.confirm(I18n.t('player.confirmClearAll'))) {
         PlayerStore.clear();
         SoundManager.play('click');
       }
     }
 
     renderList();
+    localizeStaticPanel();
     const unsubscribe = PlayerStore.onChange(renderList);
 
     root.querySelector('#playerAddBtn').addEventListener('click', handleAdd);
@@ -974,10 +990,10 @@ const PlayerManager = (() => {
       if (e.key === 'Enter') handleAdd();
     });
     root.querySelector('#playerShuffleBtn').addEventListener('click', () => {
-      if (PlayerStore.count() < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+      if (PlayerStore.count() < 2) { showToast(I18n.t('common.needMinPlayers', { n: 2 })); return; }
       PlayerStore.shuffle();
       SoundManager.play('click');
-      showToast('สลับลำดับผู้เล่นแล้ว');
+      showToast(I18n.t('player.shuffled'));
     });
     root.querySelector('#playerImportBtn').addEventListener('click', openImportModal);
     root.querySelector('#playerClearBtn').addEventListener('click', confirmClear);
@@ -998,8 +1014,8 @@ const PlayerManager = (() => {
     modal.style.maxWidth = '480px';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', 'แก้ไขผู้เล่น');
-    modal.innerHTML = `<h3>👥 แก้ไข / เพิ่มชื่อผู้เล่น</h3>`;
+    modal.setAttribute('aria-label', I18n.t('player.editModalAria'));
+    modal.innerHTML = `<h3>${I18n.t('player.editModalTitle')}</h3>`;
 
     const panel = document.getElementById('playerPanelTpl').content.cloneNode(true);
     modal.appendChild(panel);
@@ -1007,7 +1023,7 @@ const PlayerManager = (() => {
     const closeRow = document.createElement('div');
     closeRow.className = 'btn-row';
     closeRow.style.marginTop = '6px';
-    closeRow.innerHTML = `<button class="btn secondary" id="playerModalCloseBtn">ปิด</button>`;
+    closeRow.innerHTML = `<button class="btn secondary" id="playerModalCloseBtn">${I18n.t('common.close')}</button>`;
     modal.appendChild(closeRow);
 
     backdrop.appendChild(modal);
@@ -1044,13 +1060,13 @@ const ShareResult = (() => {
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.innerHTML = `
-      <div class="modal glass" role="dialog" aria-modal="true" aria-label="แชร์ผลการแข่งขัน">
+      <div class="modal glass" role="dialog" aria-modal="true" aria-label="${I18n.t('share.aria')}">
         <h3>📤 Share Result</h3>
         <div class="share-preview">${Utils.escapeHtml(text)}</div>
         <div class="btn-row">
           <button class="btn" id="shareCopyBtn">📋 Copy Text</button>
           <button class="btn secondary" id="shareImageBtn">🖼 Generate Image</button>
-          <button class="btn ghost" id="shareCloseBtn">ปิด</button>
+          <button class="btn ghost" id="shareCloseBtn">${I18n.t('common.close')}</button>
         </div>
       </div>`;
     document.body.appendChild(backdrop);
@@ -1060,7 +1076,7 @@ const ShareResult = (() => {
 
     backdrop.querySelector('#shareCopyBtn').addEventListener('click', async () => {
       const ok = await ShareUtil.copyText(text);
-      showToast(ok ? 'คัดลอกข้อความแล้ว ✅' : 'คัดลอกไม่สำเร็จ');
+      showToast(ok ? I18n.t('share.copied') : I18n.t('share.copyFailed'));
     });
 
     backdrop.querySelector('#shareImageBtn').addEventListener('click', async () => {
@@ -1068,7 +1084,7 @@ const ShareResult = (() => {
       const shared = await ShareUtil.shareCanvas(canvas, text);
       if (!shared) {
         ShareUtil.downloadCanvas(canvas, 'circle-break-result.png');
-        showToast('บันทึกรูปภาพแล้ว ✅');
+        showToast(I18n.t('share.imageSaved'));
       }
     });
   }
@@ -1088,8 +1104,8 @@ const GameSettingsUtil = (() => {
   function attachGearButton(stageEl, onClick) {
     const btn = document.createElement('button');
     btn.className = 'game-gear-btn';
-    btn.setAttribute('aria-label', 'ตั้งค่าเกมนี้');
-    btn.title = 'ตั้งค่าเกมนี้';
+    btn.setAttribute('aria-label', I18n.t('common.gameSettingsAria'));
+    btn.title = I18n.t('common.gameSettingsAria');
     btn.textContent = '⚙';
     btn.addEventListener('click', onClick);
     stageEl.appendChild(btn);
@@ -1110,12 +1126,12 @@ const GameSettingsUtil = (() => {
     modal.className = 'modal glass';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', `ตั้งค่า ${cfg.title}`);
+    modal.setAttribute('aria-label', I18n.t('gsettings.modalAria', { title: cfg.title }));
 
-    let html = `<h3>⚙ ตั้งค่า · ${Utils.escapeHtml(cfg.title)}</h3>`;
+    let html = `<h3>${I18n.t('gsettings.modalTitle', { title: Utils.escapeHtml(cfg.title) })}</h3>`;
     html += `<div class="settings-row" style="padding-top:4px">
-      <span>👥 แก้ไข / เพิ่มชื่อผู้เล่น</span>
-      <button class="btn secondary" id="gsEditNamesBtn">แก้ไข</button>
+      <span>${I18n.t('gsettings.editPlayersLabel')}</span>
+      <button class="btn secondary" id="gsEditNamesBtn">${I18n.t('common.edit')}</button>
     </div>`;
 
     if (cfg.duration) {
@@ -1138,19 +1154,19 @@ const GameSettingsUtil = (() => {
         <div class="switch ${cfg.timer.on ? 'on' : ''}" id="gsTimerSwitch" role="switch" aria-checked="${cfg.timer.on}" tabindex="0"></div>
       </div>
       <div class="settings-subrow">
-        <span style="color:var(--text-dim); font-size:.88rem">เวลาต่อรอบ (วินาที)</span>
+        <span style="color:var(--text-dim); font-size:.88rem">${I18n.t('gsettings.secondsPerRound')}</span>
         <input type="number" min="3" max="60" step="1" class="timer-seconds-input" id="gsTimerSeconds" value="${cfg.timer.seconds}">
       </div>`;
     }
 
     if (cfg.elimination && cfg.elimination.eliminatedList && cfg.elimination.eliminatedList.length) {
       html += `<div class="eliminated-panel">
-        <div class="eliminated-title">${cfg.elimination.eliminatedListLabel || 'รายชื่อที่คัดออกแล้ว'}</div>
+        <div class="eliminated-title">${cfg.elimination.eliminatedListLabel || I18n.t('gsettings.defaultEliminatedLabel')}</div>
         <div class="eliminated-chips">${cfg.elimination.eliminatedList.map((n, i) => `<span class="eliminated-chip"><span class="rank">${i + 1}.</span>${Utils.escapeHtml(n)}</span>`).join('')}</div>
       </div>`;
     }
 
-    html += `<div class="btn-row" style="margin-top:12px"><button class="btn" id="gsCloseBtn">ปิด</button></div>`;
+    html += `<div class="btn-row" style="margin-top:12px"><button class="btn" id="gsCloseBtn">${I18n.t('common.close')}</button></div>`;
     modal.innerHTML = html;
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
@@ -1247,6 +1263,212 @@ const Storage = (() => {
 })();
 
 /* ---------------------------------------------------------------------
+   I18n — Thai/English text engine. Detects the visitor's language from
+   their browser settings (falls back to Thai, since that's this site's
+   home market), remembers an explicit override, and exposes a single
+   t(key, vars) lookup every other module calls instead of hardcoding
+   strings. Language changes take effect on next render — the toggle
+   button simply reloads the page, which is simpler and safer than
+   trying to make every game's DOM reactive to a language switch.
+   --------------------------------------------------------------------- */
+const I18n = (() => {
+  const DICT = {
+    th: {
+      header: { backAria: 'กลับหน้าแรก', backText: '← กลับ', settingsAria: 'ตั้งค่า', langToggleAria: 'เปลี่ยนภาษา' },
+      common: {
+        close: 'ปิด', edit: 'แก้ไข', cancel: 'ยกเลิก', import: 'นำเข้า',
+        needMinPlayers: 'ต้องมีผู้เล่นอย่างน้อย {{n}} คน',
+        gameNotFound: 'ไม่พบเกมนี้',
+        gameSettingsAria: 'ตั้งค่าเกมนี้',
+        allDone: '🎉 คัดครบทุกคนแล้ว!',
+        winnerOrderAll: 'ลำดับผู้ชนะทั้งหมด',
+        alreadyWon: 'รายชื่อที่ชนะไปแล้ว',
+        restartAll: '🔁 เริ่มใหม่ทั้งหมด',
+        eliminationToggleWinner: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป'
+      },
+      home: {
+        title: 'วงแตก', tagline: 'สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง', chooseGame: 'เลือกเกม',
+        pageTitle: 'วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี',
+        namePicker_label: 'Name Picker', namePicker_desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', namePicker_sub: 'เลือกวิธีสุ่มที่ชอบ',
+        spinWheel_label: 'Spin Wheel', spinWheel_desc: 'หมุนวงล้อหาผู้ชนะ',
+        randomPicker_label: 'Random Picker', randomPicker_desc: 'สุ่มชื่อวิ่งไว ๆ',
+        lotteryDraw_label: 'จับฉลาก', lotteryDraw_desc: 'เขย่าโหล หยิบชื่อจากในขวด',
+        fortuneSticks_label: 'เซียมซี', fortuneSticks_desc: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา',
+        raceGames_label: 'Race Games', raceGames_desc: 'แข่งวิ่งลุ้นเส้นชัย', raceGames_sub: 'ทุกเกมยุติธรรม ไม่มีใครได้เปรียบ',
+        runningRace_label: 'Running Race', runningRace_desc: 'วิ่งแข่งกันดิบ ๆ',
+        duckRace_label: 'Duck Race', duckRace_desc: 'เป็ดว่ายน้ำ ใครไวกว่า',
+        carRace_label: 'Car Race', carRace_desc: 'ซิ่งรถ nitro ลุ้นกันมัน',
+        survivalGames_label: 'Survival Games', survivalGames_desc: 'ผลัดกันกด ใครซวยออกไป', survivalGames_sub: 'ใครโดนงับ คนนั้นออก',
+        crocodileBite_label: 'Crocodile Bite', crocodileBite_desc: 'งับใครไม่รู้ ลุ้นระทึก',
+        sharkBite_label: 'Shark Bite', sharkBite_desc: 'ธีมฉลาม สนุกไม่แพ้กัน'
+      },
+      player: {
+        panelAria: 'รายชื่อผู้เล่น', addNameLabel: 'เพิ่มชื่อผู้เล่น', addNamePlaceholder: 'พิมพ์ชื่อแล้วกด Enter…', addBtn: '+ เพิ่ม',
+        countLabel: '{{count}} / {{max}} คน',
+        emptyState: 'ยังไม่มีผู้เล่น เพิ่มชื่ออย่างน้อย 2 คนเพื่อเริ่มเล่น',
+        editAria: 'แก้ไขชื่อ {{name}}', removeAria: 'ลบ {{name}}', editPrompt: 'แก้ไขชื่อผู้เล่น',
+        importAria: 'นำเข้ารายชื่อผู้เล่น', importTitle: '📥 นำเข้ารายชื่อ',
+        importHint: 'วางชื่อทีละบรรทัด หรือคั่นด้วยจุลภาค (,) ระบบจะลบช่องว่างและชื่อซ้ำให้อัตโนมัติ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)<br><b>หมายเหตุ:</b> การนำเข้าจะแทนที่รายชื่อผู้เล่นปัจจุบันทั้งหมด',
+        confirmClearAll: 'ล้างรายชื่อผู้เล่นทั้งหมด?', shuffled: 'สลับลำดับผู้เล่นแล้ว',
+        importedWithSkipped: 'นำเข้า {{count}} ชื่อ (ตัดชื่อซ้ำ {{skipped}} ชื่อ)', importedSuccess: 'นำเข้า {{count}} ชื่อสำเร็จ',
+        editModalAria: 'แก้ไขผู้เล่น', editModalTitle: '👥 แก้ไข / เพิ่มชื่อผู้เล่น',
+        errNoName: 'กรุณาใส่ชื่อ', errMaxPlayers: 'เพิ่มได้สูงสุด {{max}} คน', errDuplicate: 'มีชื่อนี้อยู่แล้ว',
+        errNotFound: 'ไม่พบชื่อนี้', errMinImport: 'ต้องมีผู้เล่นอย่างน้อย {{min}} คน'
+      },
+      share: { aria: 'แชร์ผลการแข่งขัน', copied: 'คัดลอกข้อความแล้ว ✅', copyFailed: 'คัดลอกไม่สำเร็จ', imageSaved: 'บันทึกรูปภาพแล้ว ✅' },
+      gsettings: {
+        modalAria: 'ตั้งค่า {{title}}', modalTitle: '⚙ ตั้งค่า · {{title}}',
+        editPlayersLabel: '👥 แก้ไข / เพิ่มชื่อผู้เล่น', secondsPerRound: 'เวลาต่อรอบ (วินาที)',
+        defaultEliminatedLabel: 'รายชื่อที่คัดออกแล้ว'
+      },
+      settingsPanel: {
+        tagline: 'ปรับแต่งการเล่นให้ถูกใจ',
+        contactTitle: 'ติดต่อ / แจ้งปัญหา', contactBody: 'พบปัญหาการใช้งาน หรืออยากแนะนำเกมใหม่? ส่งอีเมลมาได้เลยที่',
+        adsPrivacyTitle: 'โฆษณา & ความเป็นส่วนตัว',
+        adsPrivacyBody: 'เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้เพื่อปรับโฆษณาให้ตรงความสนใจ หากต้องการปิดโฆษณาแบบปรับตามความสนใจ (personalized ads) จัดการได้ที่',
+        adsPrivacyLink: 'การตั้งค่าโฆษณาของ Google',
+        confirmResetAll: 'ล้างข้อมูลทั้งหมด (ผู้เล่น, การตั้งค่า) ในเครื่องนี้?', resetDone: 'ล้างข้อมูลแล้ว กำลังกลับหน้าแรก…'
+      },
+      footer: {
+        privacyNote: 'ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น',
+        adsCredit: 'เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้ —', adsCreditLink: 'ดูวิธีที่ Google ใช้ข้อมูลโฆษณา'
+      },
+      ad: { label: 'โฆษณา' },
+      spinWheel: { tagline: 'หมุนวงล้อ ใครจะเป็นผู้ถูกเลือก', durationLabel: '🕒 ตั้งเวลาหน่วงการหมุน (วินาที)', spinBtn: '🎡 หมุนวงล้อ' },
+      randomPicker: { tagline: 'กดสุ่ม แล้วลุ้นว่าใครจะโดนเลือก', durationLabel: '🕒 ตั้งเวลาหน่วงการสุ่ม (วินาที)', ready: 'พร้อมสุ่ม!' },
+      lotteryDraw: { title: 'จับฉลาก', tagline: 'เขย่าโหล แล้วหยิบชื่อผู้โชคดี', durationLabel: '🕒 ตั้งเวลาหน่วงการเขย่าโหล (วินาที)', drawBtn: '🎫 จับฉลาก' },
+      fortuneSticks: { title: 'เซียมซี', tagline: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา', durationLabel: '🕒 ตั้งเวลาหน่วงการเขย่า (วินาที)', drawBtn: '🥢 เขย่าเซียมซี' },
+      race: {
+        runningTagline: 'วิ่งแข่งกันดิบ ๆ ใครถึงเส้นชัยก่อน', duckTagline: 'เป็ดว่ายน้ำ ตัวไหนจะไวที่สุด', carTagline: 'ซิ่งรถหลายสี ใครใช้ Nitro ไวกว่ากัน',
+        eliminationLabel: '🏅 คัดผู้ชนะออกจากรอบถัดไป', timerLabel: '⏱ จำกัดเวลาต่อรอบ (ตัดจบอัตโนมัติ)',
+        startBtn: '🏁 เริ่มการแข่งขัน', go: 'ไป!', lastOneLeft: '🎉 เหลือคนเดียว: <b>{{name}}</b>'
+      },
+      bite: {
+        crocTagline: 'ผลัดกันกด ระวังโดนงับ', sharkTagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน',
+        biteWordCroc: 'งับ!', biteWordShark: 'ฉลามงับ!',
+        eliminationLabel: '🏅 ตัดผู้แพ้ออกจากรอบถัดไป', eliminatedListLabel: 'รายชื่อที่ออกไปแล้ว', timerLabel: '⏱ ตั้งเวลาต่อตา',
+        toothAria: 'ซี่ฟันที่ {{n}}', turnOf: 'ตาของ: {{name}}',
+        lastSurvivor: '🏆 ผู้รอดชีวิตคนสุดท้าย: <b>{{name}}</b>', allDone: '🎉 จบเกมแล้ว!', eliminatedOrder: 'ลำดับผู้ที่ออกไปแล้ว',
+        lostMessage: '{{biteWord}} <b>{{name}}</b> ออกจากเกม!', nextRound: 'รอบต่อไป', loserLabel: '{{name}} (ผู้แพ้)'
+      }
+    },
+    en: {
+      header: { backAria: 'Back to home', backText: '← Back', settingsAria: 'Settings', langToggleAria: 'Change language' },
+      common: {
+        close: 'Close', edit: 'Edit', cancel: 'Cancel', import: 'Import',
+        needMinPlayers: 'Need at least {{n}} players',
+        gameNotFound: 'Game not found',
+        gameSettingsAria: 'Game settings',
+        allDone: '🎉 Everyone has been picked!',
+        winnerOrderAll: 'Full winner order',
+        alreadyWon: 'Already won',
+        restartAll: '🔁 Restart All',
+        eliminationToggleWinner: '🏅 Remove winner from next round'
+      },
+      home: {
+        title: 'Circle Break', tagline: 'Shuffle friends, stir the chaos, thrill the whole crew', chooseGame: 'Choose a Game',
+        pageTitle: 'Circle Break — Random Name Picker, Spin Wheel, Races & Party Games',
+        namePicker_label: 'Name Picker', namePicker_desc: 'Pick one name, or spin the wheel', namePicker_sub: 'Choose how you want to pick',
+        spinWheel_label: 'Spin Wheel', spinWheel_desc: 'Spin the wheel to find a winner',
+        randomPicker_label: 'Random Picker', randomPicker_desc: 'Fast, running-name randomizer',
+        lotteryDraw_label: 'Lottery Draw', lotteryDraw_desc: 'Shake the jar, draw a name',
+        fortuneSticks_label: 'Fortune Sticks', fortuneSticks_desc: 'Shake the cup and see which stick pops out',
+        raceGames_label: 'Race Games', raceGames_desc: 'Race to the finish line', raceGames_sub: 'Every game is fair — no one has an edge',
+        runningRace_label: 'Running Race', runningRace_desc: 'A raw, straight-up footrace',
+        duckRace_label: 'Duck Race', duckRace_desc: "Swimming ducks — who's fastest?",
+        carRace_label: 'Car Race', carRace_desc: 'Nitro-fueled cars, thrilling finish',
+        survivalGames_label: 'Survival Games', survivalGames_desc: "Take turns pressing — who's out of luck?", survivalGames_sub: 'Whoever gets bitten is out',
+        crocodileBite_label: 'Crocodile Bite', crocodileBite_desc: 'Nail-biting bite roulette',
+        sharkBite_label: 'Shark Bite', sharkBite_desc: 'Shark-themed, just as fun'
+      },
+      player: {
+        panelAria: 'Player list', addNameLabel: 'Add player name', addNamePlaceholder: 'Type a name and press Enter…', addBtn: '+ Add',
+        countLabel: '{{count}} / {{max}} players',
+        emptyState: 'No players yet — add at least 2 names to start',
+        editAria: 'Edit name {{name}}', removeAria: 'Remove {{name}}', editPrompt: 'Edit player name',
+        importAria: 'Import player names', importTitle: '📥 Import Names',
+        importHint: 'Paste one name per line, or separate with commas (,). Extra spaces and duplicates are removed automatically (case-insensitive).<br><b>Note:</b> importing replaces the entire current player list.',
+        confirmClearAll: 'Clear all players?', shuffled: 'Player order shuffled',
+        importedWithSkipped: 'Imported {{count}} names (skipped {{skipped}} duplicates)', importedSuccess: 'Successfully imported {{count}} names',
+        editModalAria: 'Edit players', editModalTitle: '👥 Edit / Add Player Names',
+        errNoName: 'Please enter a name', errMaxPlayers: 'Maximum {{max}} players', errDuplicate: 'This name already exists',
+        errNotFound: 'Name not found', errMinImport: 'Need at least {{min}} players'
+      },
+      share: { aria: 'Share result', copied: 'Text copied ✅', copyFailed: 'Copy failed', imageSaved: 'Image saved ✅' },
+      gsettings: {
+        modalAria: '{{title}} Settings', modalTitle: '⚙ Settings · {{title}}',
+        editPlayersLabel: '👥 Edit / add player names', secondsPerRound: 'Time per round (seconds)',
+        defaultEliminatedLabel: 'Already eliminated'
+      },
+      settingsPanel: {
+        tagline: 'Customize your play experience',
+        contactTitle: 'Contact / Report an Issue', contactBody: 'Found a bug, or have a game idea? Email us at',
+        adsPrivacyTitle: 'Ads & Privacy',
+        adsPrivacyBody: 'This site shows ads via Google AdSense, which may use cookies to personalize ads. To opt out of personalized ads, manage it at',
+        adsPrivacyLink: 'Google Ads Settings',
+        confirmResetAll: 'Clear all data (players, settings) on this device?', resetDone: 'Data cleared, returning home…'
+      },
+      footer: {
+        privacyNote: 'No accounts · No player database on any server · Names are stored on your device only',
+        adsCredit: 'This site shows ads via Google AdSense, which may use cookies —', adsCreditLink: 'See how Google uses ad data'
+      },
+      ad: { label: 'Advertisement' },
+      spinWheel: { tagline: 'Spin the wheel — who will be chosen?', durationLabel: '🕒 Spin delay (seconds)', spinBtn: '🎡 Spin the Wheel' },
+      randomPicker: { tagline: 'Press random and see who gets picked', durationLabel: '🕒 Pick delay (seconds)', ready: 'Ready to pick!' },
+      lotteryDraw: { title: 'Lottery Draw', tagline: 'Shake the jar and draw a lucky name', durationLabel: '🕒 Jar shake delay (seconds)', drawBtn: '🎫 Draw' },
+      fortuneSticks: { title: 'Fortune Sticks', tagline: 'Shake the cup and see which stick falls out', durationLabel: '🕒 Shake delay (seconds)', drawBtn: '🥢 Shake the Cup' },
+      race: {
+        runningTagline: 'A raw footrace — who crosses first?', duckTagline: 'Swimming ducks — which one is fastest?', carTagline: "Multicolor cars — whose nitro is faster?",
+        eliminationLabel: '🏅 Remove winner from next round', timerLabel: '⏱ Time limit per round (auto cutoff)',
+        startBtn: '🏁 Start Race', go: 'Go!', lastOneLeft: '🎉 Only one left: <b>{{name}}</b>'
+      },
+      bite: {
+        crocTagline: 'Take turns pressing — watch out for the bite', sharkTagline: 'Shark theme, thrills all the same',
+        biteWordCroc: 'Chomp!', biteWordShark: 'Shark bite!',
+        eliminationLabel: '🏅 Remove loser from next round', eliminatedListLabel: 'Already eliminated', timerLabel: '⏱ Set time per turn',
+        toothAria: 'Tooth #{{n}}', turnOf: "{{name}}'s turn",
+        lastSurvivor: '🏆 Last survivor: <b>{{name}}</b>', allDone: '🎉 Game over!', eliminatedOrder: 'Elimination order',
+        lostMessage: '{{biteWord}} <b>{{name}}</b> is out!', nextRound: 'Next Round', loserLabel: '{{name}} (loser)'
+      }
+    }
+  };
+
+  function detect() {
+    const saved = Storage.get('lang', null);
+    if (saved === 'th' || saved === 'en') return saved;
+    const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+    const isThai = langs.some(l => (l || '').toLowerCase().startsWith('th'));
+    return isThai ? 'th' : 'en';
+  }
+
+  let current = detect();
+
+  function lookup(dictForLang, key) {
+    return key.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, dictForLang);
+  }
+
+  function t(key, vars) {
+    let str = lookup(DICT[current], key);
+    if (str === undefined) str = lookup(DICT.en, key); // fallback if a key is ever missing in one dict
+    if (str === undefined) return key;
+    if (vars) {
+      Object.keys(vars).forEach(k => { str = str.replace(new RegExp('{{' + k + '}}', 'g'), vars[k]); });
+    }
+    return str;
+  }
+
+  function lang() { return current; }
+
+  function setLang(l) {
+    if (l !== 'th' && l !== 'en') return;
+    Storage.set('lang', l);
+    window.location.reload();
+  }
+
+  return { t, lang, setLang, detect };
+})();
+
+/* ---------------------------------------------------------------------
    Utils — shared pure helpers used by every game.
    --------------------------------------------------------------------- */
 const Utils = (() => {
@@ -1328,9 +1550,9 @@ const PlayerStore = (() => {
 
   function add(name) {
     const trimmed = (name || '').trim();
-    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
-    if (players.length >= MAX_PLAYERS) return { ok: false, error: `เพิ่มได้สูงสุด ${MAX_PLAYERS} คน` };
-    if (existsCaseInsensitive(trimmed)) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    if (!trimmed) return { ok: false, error: I18n.t('player.errNoName') };
+    if (players.length >= MAX_PLAYERS) return { ok: false, error: I18n.t('player.errMaxPlayers', { max: MAX_PLAYERS }) };
+    if (existsCaseInsensitive(trimmed)) return { ok: false, error: I18n.t('player.errDuplicate') };
     players.push(trimmed);
     persist();
     return { ok: true };
@@ -1343,11 +1565,11 @@ const PlayerStore = (() => {
 
   function edit(oldName, newName) {
     const trimmed = (newName || '').trim();
-    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
+    if (!trimmed) return { ok: false, error: I18n.t('player.errNoName') };
     const dup = players.some(p => p !== oldName && p.toLowerCase() === trimmed.toLowerCase());
-    if (dup) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    if (dup) return { ok: false, error: I18n.t('player.errDuplicate') };
     const idx = players.indexOf(oldName);
-    if (idx === -1) return { ok: false, error: 'ไม่พบชื่อนี้' };
+    if (idx === -1) return { ok: false, error: I18n.t('player.errNotFound') };
     players[idx] = trimmed;
     persist();
     return { ok: true };
@@ -1385,7 +1607,7 @@ const PlayerStore = (() => {
       if (result.length >= MAX_PLAYERS) break;
     }
     if (result.length < MIN_PLAYERS) {
-      return { ok: false, error: `ต้องมีผู้เล่นอย่างน้อย ${MIN_PLAYERS} คน` };
+      return { ok: false, error: I18n.t('player.errMinImport', { min: MIN_PLAYERS }) };
     }
     players = result;
     persist();
@@ -1682,8 +1904,8 @@ const App = (() => {
   let currentGame = null;
   let homePlayerInstance = null;
 
-  const HOME_TITLE = 'วงแตก';
-  const HOME_TAGLINE = 'สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง';
+  const HOME_TITLE = () => I18n.t('home.title');
+  const HOME_TAGLINE = () => I18n.t('home.tagline');
 
   function destroyHomePlayerInstance() {
     if (homePlayerInstance) { homePlayerInstance.destroy(); homePlayerInstance = null; }
@@ -1699,16 +1921,16 @@ const App = (() => {
     SoundManager.play('click');
     renderHome();
     backBtn().style.display = 'none';
-    headerTitle().textContent = HOME_TITLE;
-    headerTagline().textContent = HOME_TAGLINE;
+    headerTitle().textContent = HOME_TITLE();
+    headerTagline().textContent = HOME_TAGLINE();
     window.scrollTo({ top: 0, behavior: AnimationSetting.isEnabled() ? 'smooth' : 'auto' });
   }
 
   function openGame(id) {
     const game = GameManager.get(id);
-    if (!game) { showToast('ไม่พบเกมนี้'); return; }
+    if (!game) { showToast(I18n.t('common.gameNotFound')); return; }
     if (game.requiresPlayers !== false && !PlayerStore.canStartGame()) {
-      showToast(`ต้องมีผู้เล่นอย่างน้อย ${PlayerStore.MIN_PLAYERS} คน`);
+      showToast(I18n.t('common.needMinPlayers', { n: PlayerStore.MIN_PLAYERS }));
       return;
     }
     unmountCurrent();
@@ -1754,21 +1976,21 @@ const App = (() => {
     // Settings is reached via the gear icon in the header only (see index.html) —
     // it isn't a menu card here, so the grid stays focused on the games.
     const menuItems = [
-      { emoji: '🎲', label: 'Name Picker', desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', onClick: () => openSubmenu([
-          { emoji: '🎡', label: 'Spin Wheel', desc: 'หมุนวงล้อหาผู้ชนะ', onClick: () => openGame('spin-wheel') },
-          { emoji: '🎯', label: 'Random Picker', desc: 'สุ่มชื่อวิ่งไว ๆ', onClick: () => openGame('random-picker') },
-          { emoji: '🎫', label: 'จับฉลาก', desc: 'เขย่าโหล หยิบชื่อจากในขวด', onClick: () => openGame('lottery-draw') },
-          { emoji: '🥢', label: 'เซียมซี', desc: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา', onClick: () => openGame('fortune-sticks') },
-        ], 'Name Picker', 'เลือกวิธีสุ่มที่ชอบ') },
-      { emoji: '🏁', label: 'Race Games', desc: 'แข่งวิ่งลุ้นเส้นชัย', onClick: () => openSubmenu([
-          { emoji: '🏃', label: 'Running Race', desc: 'วิ่งแข่งกันดิบ ๆ', onClick: () => openGame('running-race') },
-          { emoji: '🦆', label: 'Duck Race', desc: 'เป็ดว่ายน้ำ ใครไวกว่า', onClick: () => openGame('duck-race') },
-          { emoji: '🚗', label: 'Car Race', desc: 'ซิ่งรถ nitro ลุ้นกันมัน', onClick: () => openGame('car-race') },
-        ], 'Race Games', 'ทุกเกมยุติธรรม ไม่มีใครได้เปรียบ') },
-      { emoji: '🐊', label: 'Survival Games', desc: 'ผลัดกันกด ใครซวยออกไป', onClick: () => openSubmenu([
-          { emoji: '🐊', label: 'Crocodile Bite', desc: 'งับใครไม่รู้ ลุ้นระทึก', onClick: () => openGame('crocodile-bite') },
-          { emoji: '🦈', label: 'Shark Bite', desc: 'ธีมฉลาม สนุกไม่แพ้กัน', onClick: () => openGame('shark-bite') },
-        ], 'Survival Games', 'ใครโดนงับ คนนั้นออก') },
+      { emoji: '🎲', label: I18n.t('home.namePicker_label'), desc: I18n.t('home.namePicker_desc'), onClick: () => openSubmenu([
+          { emoji: '🎡', label: I18n.t('home.spinWheel_label'), desc: I18n.t('home.spinWheel_desc'), onClick: () => openGame('spin-wheel') },
+          { emoji: '🎯', label: I18n.t('home.randomPicker_label'), desc: I18n.t('home.randomPicker_desc'), onClick: () => openGame('random-picker') },
+          { emoji: '🎫', label: I18n.t('home.lotteryDraw_label'), desc: I18n.t('home.lotteryDraw_desc'), onClick: () => openGame('lottery-draw') },
+          { emoji: '🥢', label: I18n.t('home.fortuneSticks_label'), desc: I18n.t('home.fortuneSticks_desc'), onClick: () => openGame('fortune-sticks') },
+        ], I18n.t('home.namePicker_label'), I18n.t('home.namePicker_sub')) },
+      { emoji: '🏁', label: I18n.t('home.raceGames_label'), desc: I18n.t('home.raceGames_desc'), onClick: () => openSubmenu([
+          { emoji: '🏃', label: I18n.t('home.runningRace_label'), desc: I18n.t('home.runningRace_desc'), onClick: () => openGame('running-race') },
+          { emoji: '🦆', label: I18n.t('home.duckRace_label'), desc: I18n.t('home.duckRace_desc'), onClick: () => openGame('duck-race') },
+          { emoji: '🚗', label: I18n.t('home.carRace_label'), desc: I18n.t('home.carRace_desc'), onClick: () => openGame('car-race') },
+        ], I18n.t('home.raceGames_label'), I18n.t('home.raceGames_sub')) },
+      { emoji: '🐊', label: I18n.t('home.survivalGames_label'), desc: I18n.t('home.survivalGames_desc'), onClick: () => openSubmenu([
+          { emoji: '🐊', label: I18n.t('home.crocodileBite_label'), desc: I18n.t('home.crocodileBite_desc'), onClick: () => openGame('crocodile-bite') },
+          { emoji: '🦈', label: I18n.t('home.sharkBite_label'), desc: I18n.t('home.sharkBite_desc'), onClick: () => openGame('shark-bite') },
+        ], I18n.t('home.survivalGames_label'), I18n.t('home.survivalGames_sub')) },
     ];
 
     menuItems.forEach(item => {
@@ -1781,12 +2003,53 @@ const App = (() => {
 
     const heading = document.createElement('div');
     heading.className = 'section-title';
-    heading.innerHTML = `<span class="eyebrow-tag">เลือกเกม</span>`;
+    heading.innerHTML = `<span class="eyebrow-tag">${I18n.t('home.chooseGame')}</span>`;
     mainEl().appendChild(heading);
     mainEl().appendChild(grid);
   }
 
+  /** Applies the detected/saved language to the static shell markup that
+      ships in index.html (header, footer, ad label) before any game
+      has rendered — everything else is generated fresh by JS already,
+      so it naturally comes out in the right language via I18n.t(). */
+  function localizeStaticShell() {
+    document.documentElement.lang = I18n.lang();
+    document.title = I18n.t('home.pageTitle');
+
+    headerTitle().textContent = HOME_TITLE();
+    headerTagline().textContent = HOME_TAGLINE();
+
+    backBtn().setAttribute('aria-label', I18n.t('header.backAria'));
+    backBtn().textContent = I18n.t('header.backText');
+
+    const settingsBtn = document.getElementById('settingsShortcut');
+    if (settingsBtn) {
+      settingsBtn.setAttribute('aria-label', I18n.t('header.settingsAria'));
+      settingsBtn.title = I18n.t('header.settingsAria');
+    }
+
+    const adLabel = document.querySelector('.ad-slot-label');
+    if (adLabel) adLabel.textContent = I18n.t('ad.label');
+
+    const privacyNote = document.getElementById('footerPrivacyNote');
+    if (privacyNote) privacyNote.textContent = I18n.t('footer.privacyNote');
+
+    const adsCredit = document.getElementById('footerAdsCredit');
+    if (adsCredit) {
+      adsCredit.innerHTML = `${I18n.t('footer.adsCredit')} <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">${I18n.t('footer.adsCreditLink')}</a>`;
+    }
+
+    const langBtn = document.getElementById('langToggleBtn');
+    if (langBtn) {
+      langBtn.textContent = I18n.lang() === 'th' ? 'ไทย' : 'EN';
+      langBtn.setAttribute('aria-label', I18n.t('header.langToggleAria'));
+      langBtn.title = I18n.t('header.langToggleAria');
+      langBtn.addEventListener('click', () => I18n.setLang(I18n.lang() === 'th' ? 'en' : 'th'));
+    }
+  }
+
   function init() {
+    localizeStaticShell();
     ThemeSetting.apply();
     AnimationSetting.apply();
     backBtn().addEventListener('click', goHome);
@@ -1870,16 +2133,16 @@ window.addEventListener('DOMContentLoaded', () => {
     GameSettingsUtil.openModal({
       title: 'Spin Wheel',
       duration: {
-        label: '🕒 ตั้งเวลาหน่วงการหมุน (วินาที)',
+        label: I18n.t('spinWheel.durationLabel'),
         value: spinDurationSeconds,
         min: 2, max: 12, step: 0.5,
         onChange: (v) => { spinDurationSeconds = v; }
       },
       elimination: {
-        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        label: I18n.t('common.eliminationToggleWinner'),
         on: eliminationOn,
         eliminatedList: pickedList,
-        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        eliminatedListLabel: I18n.t('common.alreadyWon'),
         onToggle: (next) => {
           eliminationOn = next;
           if (next) pickedList = [];
@@ -1902,10 +2165,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (eliminationOn && players.length === 0) {
       container.innerHTML = `
         <section class="glass game-stage">
-          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
-          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="winner-name">${I18n.t('common.allDone')}</div>
+          ${eliminatedPanelHtml(pickedList, I18n.t('common.winnerOrderAll'))}
           <div class="btn-row" style="justify-content:center">
-            <button class="btn" id="wheelResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            <button class="btn" id="wheelResetElimBtn">${I18n.t('common.restartAll')}</button>
           </div>
         </section>`;
       GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -1919,9 +2182,9 @@ window.addEventListener('DOMContentLoaded', () => {
           <div class="wheel-pointer"></div>
           ${buildWheelSvg(players)}
         </div>
-        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, I18n.t('common.alreadyWon')) : ''}
         <div class="btn-row" style="justify-content:center">
-          <button class="btn" id="spinBtn">🎡 หมุนวงล้อ</button>
+          <button class="btn" id="spinBtn">${I18n.t('spinWheel.spinBtn')}</button>
         </div>
         <div id="wheelResult" style="margin-top:10px"></div>
       </section>`;
@@ -1949,7 +2212,7 @@ window.addEventListener('DOMContentLoaded', () => {
   function spin(container) {
     if (spinning) return;
     const players = activePlayers();
-    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+    if (players.length < 2) { showToast(I18n.t('common.needMinPlayers', { n: 2 })); return; }
     spinning = true;
 
     const winnerIndex = Utils.randomIndex(players.length);
@@ -1993,7 +2256,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   GameManager.register('spin-wheel', {
     title: 'Spin Wheel',
-    tagline: 'หมุนวงล้อ ใครจะเป็นผู้ถูกเลือก',
+    tagline: I18n.t('spinWheel.tagline'),
     mount,
     unmount() { spinning = false; if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
   });
@@ -2032,16 +2295,16 @@ window.addEventListener('DOMContentLoaded', () => {
     GameSettingsUtil.openModal({
       title: 'Random Picker',
       duration: {
-        label: '🕒 ตั้งเวลาหน่วงการสุ่ม (วินาที)',
+        label: I18n.t('randomPicker.durationLabel'),
         value: pickDurationSeconds,
         min: 1, max: 8, step: 0.5,
         onChange: (v) => { pickDurationSeconds = v; }
       },
       elimination: {
-        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        label: I18n.t('common.eliminationToggleWinner'),
         on: eliminationOn,
         eliminatedList: pickedList,
-        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        eliminatedListLabel: I18n.t('common.alreadyWon'),
         onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
       }
     });
@@ -2058,10 +2321,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (eliminationOn && players.length === 0) {
       container.innerHTML = `
         <section class="glass game-stage">
-          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
-          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="winner-name">${I18n.t('common.allDone')}</div>
+          ${eliminatedPanelHtml(pickedList, I18n.t('common.winnerOrderAll'))}
           <div class="btn-row" style="justify-content:center">
-            <button class="btn" id="pickerResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            <button class="btn" id="pickerResetElimBtn">${I18n.t('common.restartAll')}</button>
           </div>
         </section>`;
       GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -2071,8 +2334,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     container.innerHTML = `
       <section class="glass game-stage">
-        <div class="picker-display" id="pickerDisplay">พร้อมสุ่ม!</div>
-        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        <div class="picker-display" id="pickerDisplay">${I18n.t('randomPicker.ready')}</div>
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, I18n.t('common.alreadyWon')) : ''}
         <div class="btn-row" style="justify-content:center">
           <button class="btn" id="pickBtn">🎯 Random</button>
         </div>
@@ -2100,7 +2363,7 @@ window.addEventListener('DOMContentLoaded', () => {
   function run(container) {
     if (rafId) return;
     const players = activePlayers();
-    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+    if (players.length < 2) { showToast(I18n.t('common.needMinPlayers', { n: 2 })); return; }
 
     const display = container.querySelector('#pickerDisplay');
     container.querySelector('#pickerResultActions').innerHTML = '';
@@ -2156,7 +2419,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   GameManager.register('random-picker', {
     title: 'Random Picker',
-    tagline: 'กดสุ่ม แล้วลุ้นว่าใครจะโดนเลือก',
+    tagline: I18n.t('randomPicker.tagline'),
     mount,
     unmount() { if (rafId) cancelAnimationFrame(rafId); rafId = null; if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; } }
   });
@@ -2198,18 +2461,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function openGearSettings(container) {
     GameSettingsUtil.openModal({
-      title: 'จับฉลาก',
+      title: I18n.t('lotteryDraw.title'),
       duration: {
-        label: '🕒 ตั้งเวลาหน่วงการเขย่าโหล (วินาที)',
+        label: I18n.t('lotteryDraw.durationLabel'),
         value: shakeDurationSeconds,
         min: 1, max: 8, step: 0.5,
         onChange: (v) => { shakeDurationSeconds = v; }
       },
       elimination: {
-        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        label: I18n.t('common.eliminationToggleWinner'),
         on: eliminationOn,
         eliminatedList: pickedList,
-        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        eliminatedListLabel: I18n.t('common.alreadyWon'),
         onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
       }
     });
@@ -2245,10 +2508,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (eliminationOn && players.length === 0) {
       container.innerHTML = `
         <section class="glass game-stage">
-          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
-          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="winner-name">${I18n.t('common.allDone')}</div>
+          ${eliminatedPanelHtml(pickedList, I18n.t('common.winnerOrderAll'))}
           <div class="btn-row" style="justify-content:center">
-            <button class="btn" id="lotteryResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            <button class="btn" id="lotteryResetElimBtn">${I18n.t('common.restartAll')}</button>
           </div>
         </section>`;
       GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -2266,9 +2529,9 @@ window.addEventListener('DOMContentLoaded', () => {
             <div class="jar-shine"></div>
           </div>
         </div>
-        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, I18n.t('common.alreadyWon')) : ''}
         <div class="btn-row" style="justify-content:center">
-          <button class="btn" id="drawBtn">🎫 จับฉลาก</button>
+          <button class="btn" id="drawBtn">${I18n.t('lotteryDraw.drawBtn')}</button>
         </div>
         <div id="lotteryResultActions" style="margin-top:10px"></div>
       </section>`;
@@ -2291,7 +2554,7 @@ window.addEventListener('DOMContentLoaded', () => {
   function run(container) {
     if (shaking) return;
     const players = activePlayers();
-    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+    if (players.length < 2) { showToast(I18n.t('common.needMinPlayers', { n: 2 })); return; }
 
     const winner = players[Utils.randomIndex(players.length)];
     const jarScene = container.querySelector('#jarScene');
@@ -2357,12 +2620,12 @@ window.addEventListener('DOMContentLoaded', () => {
         <button class="btn secondary" id="lotteryShareBtn">📤 Share Result</button>
       </div>`;
     container.querySelector('#lotteryAgainBtn').addEventListener('click', () => buildStage(container));
-    container.querySelector('#lotteryShareBtn').addEventListener('click', () => ShareResult.open('จับฉลาก', [winner]));
+    container.querySelector('#lotteryShareBtn').addEventListener('click', () => ShareResult.open(I18n.t('lotteryDraw.title'), [winner]));
   }
 
   GameManager.register('lottery-draw', {
-    title: 'จับฉลาก',
-    tagline: 'เขย่าโหล แล้วหยิบชื่อผู้โชคดี',
+    title: I18n.t('lotteryDraw.title'),
+    tagline: I18n.t('lotteryDraw.tagline'),
     mount,
     unmount() {
       shaking = false;
@@ -2412,18 +2675,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function openGearSettings(container) {
     GameSettingsUtil.openModal({
-      title: 'เซียมซี',
+      title: I18n.t('fortuneSticks.title'),
       duration: {
-        label: '🕒 ตั้งเวลาหน่วงการเขย่า (วินาที)',
+        label: I18n.t('fortuneSticks.durationLabel'),
         value: shakeDurationSeconds,
         min: 1, max: 8, step: 0.5,
         onChange: (v) => { shakeDurationSeconds = v; }
       },
       elimination: {
-        label: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป',
+        label: I18n.t('common.eliminationToggleWinner'),
         on: eliminationOn,
         eliminatedList: pickedList,
-        eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+        eliminatedListLabel: I18n.t('common.alreadyWon'),
         onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
       }
     });
@@ -2467,10 +2730,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (eliminationOn && players.length === 0) {
       container.innerHTML = `
         <section class="glass game-stage">
-          <div class="winner-name">🎉 คัดครบทุกคนแล้ว!</div>
-          ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+          <div class="winner-name">${I18n.t('common.allDone')}</div>
+          ${eliminatedPanelHtml(pickedList, I18n.t('common.winnerOrderAll'))}
           <div class="btn-row" style="justify-content:center">
-            <button class="btn" id="fortuneResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+            <button class="btn" id="fortuneResetElimBtn">${I18n.t('common.restartAll')}</button>
           </div>
         </section>`;
       GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -2486,9 +2749,9 @@ window.addEventListener('DOMContentLoaded', () => {
           <div class="stick-sticks" id="stickSticks">${renderSticksHtml(showable)}</div>
           <div class="stick-cup"></div>
         </div>
-        ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+        ${eliminationOn ? eliminatedPanelHtml(pickedList, I18n.t('common.alreadyWon')) : ''}
         <div class="btn-row" style="justify-content:center">
-          <button class="btn" id="fortuneDrawBtn">🥢 เขย่าเซียมซี</button>
+          <button class="btn" id="fortuneDrawBtn">${I18n.t('fortuneSticks.drawBtn')}</button>
         </div>
         <div id="fortuneResultActions" style="margin-top:10px"></div>
       </section>`;
@@ -2511,7 +2774,7 @@ window.addEventListener('DOMContentLoaded', () => {
   function run(container) {
     if (shaking) return;
     const players = activePlayers();
-    if (players.length < 2) { showToast('ต้องมีผู้เล่นอย่างน้อย 2 คน'); return; }
+    if (players.length < 2) { showToast(I18n.t('common.needMinPlayers', { n: 2 })); return; }
 
     const winner = players[Utils.randomIndex(players.length)];
     const scene = container.querySelector('#stickScene');
@@ -2567,12 +2830,12 @@ window.addEventListener('DOMContentLoaded', () => {
         <button class="btn secondary" id="fortuneShareBtn">📤 Share Result</button>
       </div>`;
     container.querySelector('#fortuneAgainBtn').addEventListener('click', () => buildStage(container));
-    container.querySelector('#fortuneShareBtn').addEventListener('click', () => ShareResult.open('เซียมซี', [winner]));
+    container.querySelector('#fortuneShareBtn').addEventListener('click', () => ShareResult.open(I18n.t('fortuneSticks.title'), [winner]));
   }
 
   GameManager.register('fortune-sticks', {
-    title: 'เซียมซี',
-    tagline: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา',
+    title: I18n.t('fortuneSticks.title'),
+    tagline: I18n.t('fortuneSticks.tagline'),
     mount,
     unmount() {
       shaking = false;
@@ -2606,7 +2869,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const THEMES = {
     'running-race': {
       title: 'Running Race',
-      tagline: 'วิ่งแข่งกันดิบ ๆ ใครถึงเส้นชัยก่อน',
+      get tagline() { return I18n.t('race.runningTagline'); },
       sprite: () => '🏃',
       laneBg: '',
       events: [
@@ -2620,7 +2883,7 @@ window.addEventListener('DOMContentLoaded', () => {
     },
     'duck-race': {
       title: 'Duck Race',
-      tagline: 'เป็ดว่ายน้ำ ตัวไหนจะไวที่สุด',
+      get tagline() { return I18n.t('race.duckTagline'); },
       sprite: () => '🦆',
       laneBg: 'linear-gradient(180deg, transparent 0%, rgba(76,217,192,.08) 100%)',
       events: [
@@ -2633,7 +2896,7 @@ window.addEventListener('DOMContentLoaded', () => {
     },
     'car-race': {
       title: 'Car Race',
-      tagline: 'ซิ่งรถหลายสี ใครใช้ Nitro ไวกว่ากัน',
+      get tagline() { return I18n.t('race.carTagline'); },
       sprite: (i) => '🚗',
       laneBg: 'repeating-linear-gradient(90deg, transparent 0 24px, rgba(241,238,251,.06) 24px 26px)',
       events: [
@@ -2677,14 +2940,14 @@ window.addEventListener('DOMContentLoaded', () => {
       GameSettingsUtil.openModal({
         title: theme.title,
         elimination: {
-          label: '🏅 คัดผู้ชนะออกจากรอบถัดไป',
+          label: I18n.t('race.eliminationLabel'),
           on: eliminationOn,
           eliminatedList: pickedList,
-          eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+          eliminatedListLabel: I18n.t('common.alreadyWon'),
           onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
         },
         timer: {
-          label: '⏱ จำกัดเวลาต่อรอบ (ตัดจบอัตโนมัติ)',
+          label: I18n.t('race.timerLabel'),
           on: timerOn,
           seconds: timerSeconds,
           onToggle: (next) => { timerOn = next; buildStage(container); },
@@ -2699,14 +2962,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
       if (eliminationOn && players.length < 2) {
         const doneMsg = players.length === 1
-          ? `🎉 เหลือคนเดียว: <b>${Utils.escapeHtml(players[0])}</b>`
-          : '🎉 คัดครบทุกคนแล้ว!';
+          ? I18n.t('race.lastOneLeft', { name: Utils.escapeHtml(players[0]) })
+          : I18n.t('common.allDone');
         container.innerHTML = `
           <section class="glass game-stage">
             <div class="winner-name">${doneMsg}</div>
-            ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+            ${eliminatedPanelHtml(pickedList, I18n.t('common.winnerOrderAll'))}
             <div class="btn-row" style="justify-content:center">
-              <button class="btn" id="raceResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+              <button class="btn" id="raceResetElimBtn">${I18n.t('common.restartAll')}</button>
             </div>
           </section>`;
         GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -2726,9 +2989,9 @@ window.addEventListener('DOMContentLoaded', () => {
               </div>`).join('')}
             <div class="finish-line"></div>
           </div>
-          ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+          ${eliminationOn ? eliminatedPanelHtml(pickedList, I18n.t('common.alreadyWon')) : ''}
           <div class="btn-row" style="justify-content:center">
-            <button class="btn" id="raceStartBtn">🏁 เริ่มการแข่งขัน</button>
+            <button class="btn" id="raceStartBtn">${I18n.t('race.startBtn')}</button>
           </div>
           <div id="raceResult" style="margin-top:10px; text-align:center"></div>
         </section>`;
@@ -2769,7 +3032,7 @@ window.addEventListener('DOMContentLoaded', () => {
           overlay.textContent = String(count);
           SoundManager.play('countdown');
         } else {
-          overlay.textContent = 'ไป!';
+          overlay.textContent = I18n.t('race.go');
           SoundManager.play('race');
           clearInterval(timer);
           setTimeout(() => { overlay.remove(); runRace(container, players); }, 400);
@@ -2929,8 +3192,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const TEETH_COUNT = 16;
   const ROW_COUNT = TEETH_COUNT / 2;
   const THEMES = {
-    'crocodile-bite': { title: 'Crocodile Bite', tagline: 'ผลัดกันกด ระวังโดนงับ', emoji: '🐊', biteWord: 'งับ!', cls: 'croc' },
-    'shark-bite': { title: 'Shark Bite', tagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน', emoji: '🦈', biteWord: 'ฉลามงับ!', cls: 'shark' }
+    'crocodile-bite': { title: 'Crocodile Bite', get tagline() { return I18n.t('bite.crocTagline'); }, get biteWord() { return I18n.t('bite.biteWordCroc'); }, emoji: '🐊', cls: 'croc' },
+    'shark-bite': { title: 'Shark Bite', get tagline() { return I18n.t('bite.sharkTagline'); }, get biteWord() { return I18n.t('bite.biteWordShark'); }, emoji: '🦈', cls: 'shark' }
   };
 
   /** Places each tooth's ROOT exactly on the rim of the mouth ellipse
@@ -3092,14 +3355,14 @@ window.addEventListener('DOMContentLoaded', () => {
       GameSettingsUtil.openModal({
         title: theme.title,
         elimination: {
-          label: '🏅 ตัดผู้แพ้ออกจากรอบถัดไป',
+          label: I18n.t('bite.eliminationLabel'),
           on: eliminationOn,
           eliminatedList: outList,
-          eliminatedListLabel: 'รายชื่อที่ออกไปแล้ว',
+          eliminatedListLabel: I18n.t('bite.eliminatedListLabel'),
           onToggle: (next) => { eliminationOn = next; if (next) outList = []; render(container); }
         },
         timer: {
-          label: '⏱ ตั้งเวลาต่อตา',
+          label: I18n.t('bite.timerLabel'),
           on: timerOn,
           seconds: timerSeconds,
           onToggle: (next) => { timerOn = next; render(container); startTurnCountdown(container); },
@@ -3128,14 +3391,14 @@ window.addEventListener('DOMContentLoaded', () => {
     function newRound(container) {
       if (eliminationOn && survivors().length < 2) {
         const msg = survivors().length === 1
-          ? `🏆 ผู้รอดชีวิตคนสุดท้าย: <b>${Utils.escapeHtml(survivors()[0])}</b>`
-          : '🎉 จบเกมแล้ว!';
+          ? I18n.t('bite.lastSurvivor', { name: Utils.escapeHtml(survivors()[0]) })
+          : I18n.t('bite.allDone');
         container.innerHTML = `
           <section class="glass game-stage">
             <div class="winner-name">${msg}</div>
-            ${eliminatedPanelHtml(outList, 'ลำดับผู้ที่ออกไปแล้ว')}
+            ${eliminatedPanelHtml(outList, I18n.t('bite.eliminatedOrder'))}
             <div class="btn-row" style="justify-content:center">
-              <button class="btn" id="biteResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+              <button class="btn" id="biteResetElimBtn">${I18n.t('common.restartAll')}</button>
             </div>
           </section>`;
         GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -3170,7 +3433,7 @@ window.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           </div>
-          ${eliminationOn ? eliminatedPanelHtml(outList, 'รายชื่อที่ออกไปแล้ว') : ''}
+          ${eliminationOn ? eliminatedPanelHtml(outList, I18n.t('bite.eliminatedListLabel')) : ''}
           <div id="biteResult"></div>
         </section>`;
 
@@ -3183,7 +3446,7 @@ window.addEventListener('DOMContentLoaded', () => {
       for (let i = 0; i < TEETH_COUNT; i++) {
         const btn = document.createElement('button');
         btn.className = 'tooth';
-        btn.setAttribute('aria-label', `ซี่ฟันที่ ${i + 1}`);
+        btn.setAttribute('aria-label', I18n.t('bite.toothAria', { n: i + 1 }));
         positionTooth(btn, i, angles);
         applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
         btn.addEventListener('click', () => handlePress(container, i));
@@ -3194,7 +3457,7 @@ window.addEventListener('DOMContentLoaded', () => {
     function renderTurnBanner(container) {
       const banner = container.querySelector('#turnBanner');
       if (banner && !gameOver) {
-        banner.textContent = `ตาของ: ${playersRef[turnIndex]}`;
+        banner.textContent = I18n.t('bite.turnOf', { name: playersRef[turnIndex] });
       }
     }
 
@@ -3245,14 +3508,14 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="shatter-wrap">
           <div class="winner-name" style="color:var(--coral-pop)">💥 GAME OVER</div>
         </div>
-        <p style="margin:6px 0 16px;font-size:1.1rem">${theme.biteWord} <b>${Utils.escapeHtml(loser)}</b> ออกจากเกม!</p>
+        <p style="margin:6px 0 16px;font-size:1.1rem">${I18n.t('bite.lostMessage', { biteWord: theme.biteWord, name: Utils.escapeHtml(loser) })}</p>
         <div class="btn-row" style="justify-content:center">
-          <button class="btn" id="biteRestartBtn">🔁 ${eliminationOn ? 'รอบต่อไป' : 'Restart'}</button>
+          <button class="btn" id="biteRestartBtn">🔁 ${eliminationOn ? I18n.t('bite.nextRound') : 'Restart'}</button>
           <button class="btn secondary" id="biteShareBtn">📤 Share Result</button>
         </div>`;
       WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
       container.querySelector('#biteRestartBtn').addEventListener('click', () => newRound(container));
-      container.querySelector('#biteShareBtn').addEventListener('click', () => ShareResult.open(theme.title, [`${loser} (ผู้แพ้)`]));
+      container.querySelector('#biteShareBtn').addEventListener('click', () => ShareResult.open(theme.title, [I18n.t('bite.loserLabel', { name: loser })]));
     }
 
     return {
@@ -3307,17 +3570,17 @@ window.addEventListener('DOMContentLoaded', () => {
         </div>
       </section>
       <section class="glass game-stage" style="text-align:left; margin-top:16px">
-        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">ติดต่อ / แจ้งปัญหา</span></div>
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">${I18n.t('settingsPanel.contactTitle')}</span></div>
         <div class="contact-box">
-          พบปัญหาการใช้งาน หรืออยากแนะนำเกมใหม่? ส่งอีเมลมาได้เลยที่<br>
+          ${I18n.t('settingsPanel.contactBody')}<br>
           <a href="mailto:nuttiw.suphalerk@gmail.com?subject=%5Bวงแตก%5D%20แจ้งปัญหา%2Fข้อเสนอแนะ" target="_top">nuttiw.suphalerk@gmail.com</a>
         </div>
       </section>
       <section class="glass game-stage" style="text-align:left; margin-top:16px">
-        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">โฆษณา & ความเป็นส่วนตัว</span></div>
+        <div class="section-title" style="margin-top:0"><span class="eyebrow-tag">${I18n.t('settingsPanel.adsPrivacyTitle')}</span></div>
         <div class="contact-box">
-          เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้เพื่อปรับโฆษณาให้ตรงความสนใจ หากต้องการปิดโฆษณาแบบปรับตามความสนใจ (personalized ads) จัดการได้ที่
-          <a href="https://myadcenter.google.com/" target="_blank" rel="noopener">การตั้งค่าโฆษณาของ Google</a>
+          ${I18n.t('settingsPanel.adsPrivacyBody')}
+          <a href="https://myadcenter.google.com/" target="_blank" rel="noopener">${I18n.t('settingsPanel.adsPrivacyLink')}</a>
         </div>
       </section>`;
 
@@ -3326,9 +3589,9 @@ window.addEventListener('DOMContentLoaded', () => {
     bindSwitch(container, 'darkSwitch', ThemeSetting.isDark, ThemeSetting.setDark);
 
     container.querySelector('#resetBtn').addEventListener('click', () => {
-      if (window.confirm('ล้างข้อมูลทั้งหมด (ผู้เล่น, การตั้งค่า) ในเครื่องนี้?')) {
+      if (window.confirm(I18n.t('settingsPanel.confirmResetAll'))) {
         Storage.resetAll();
-        showToast('ล้างข้อมูลแล้ว กำลังกลับหน้าแรก…');
+        showToast(I18n.t('settingsPanel.resetDone'));
         setTimeout(() => window.location.reload(), 900);
       }
     });
@@ -3336,7 +3599,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   GameManager.register('settings', {
     title: 'Settings',
-    tagline: 'ปรับแต่งการเล่นให้ถูกใจ',
+    tagline: I18n.t('settingsPanel.tagline'),
     requiresPlayers: false,
     mount,
     unmount() {}

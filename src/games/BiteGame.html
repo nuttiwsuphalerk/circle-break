@@ -14,8 +14,8 @@
   const TEETH_COUNT = 16;
   const ROW_COUNT = TEETH_COUNT / 2;
   const THEMES = {
-    'crocodile-bite': { title: 'Crocodile Bite', tagline: 'ผลัดกันกด ระวังโดนงับ', emoji: '🐊', biteWord: 'งับ!', cls: 'croc' },
-    'shark-bite': { title: 'Shark Bite', tagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน', emoji: '🦈', biteWord: 'ฉลามงับ!', cls: 'shark' }
+    'crocodile-bite': { title: 'Crocodile Bite', get tagline() { return I18n.t('bite.crocTagline'); }, get biteWord() { return I18n.t('bite.biteWordCroc'); }, emoji: '🐊', cls: 'croc' },
+    'shark-bite': { title: 'Shark Bite', get tagline() { return I18n.t('bite.sharkTagline'); }, get biteWord() { return I18n.t('bite.biteWordShark'); }, emoji: '🦈', cls: 'shark' }
   };
 
   /** Places each tooth's ROOT exactly on the rim of the mouth ellipse
@@ -177,14 +177,14 @@
       GameSettingsUtil.openModal({
         title: theme.title,
         elimination: {
-          label: '🏅 ตัดผู้แพ้ออกจากรอบถัดไป',
+          label: I18n.t('bite.eliminationLabel'),
           on: eliminationOn,
           eliminatedList: outList,
-          eliminatedListLabel: 'รายชื่อที่ออกไปแล้ว',
+          eliminatedListLabel: I18n.t('bite.eliminatedListLabel'),
           onToggle: (next) => { eliminationOn = next; if (next) outList = []; render(container); }
         },
         timer: {
-          label: '⏱ ตั้งเวลาต่อตา',
+          label: I18n.t('bite.timerLabel'),
           on: timerOn,
           seconds: timerSeconds,
           onToggle: (next) => { timerOn = next; render(container); startTurnCountdown(container); },
@@ -213,14 +213,14 @@
     function newRound(container) {
       if (eliminationOn && survivors().length < 2) {
         const msg = survivors().length === 1
-          ? `🏆 ผู้รอดชีวิตคนสุดท้าย: <b>${Utils.escapeHtml(survivors()[0])}</b>`
-          : '🎉 จบเกมแล้ว!';
+          ? I18n.t('bite.lastSurvivor', { name: Utils.escapeHtml(survivors()[0]) })
+          : I18n.t('bite.allDone');
         container.innerHTML = `
           <section class="glass game-stage">
             <div class="winner-name">${msg}</div>
-            ${eliminatedPanelHtml(outList, 'ลำดับผู้ที่ออกไปแล้ว')}
+            ${eliminatedPanelHtml(outList, I18n.t('bite.eliminatedOrder'))}
             <div class="btn-row" style="justify-content:center">
-              <button class="btn" id="biteResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+              <button class="btn" id="biteResetElimBtn">${I18n.t('common.restartAll')}</button>
             </div>
           </section>`;
         GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -255,7 +255,7 @@
               </div>
             </div>
           </div>
-          ${eliminationOn ? eliminatedPanelHtml(outList, 'รายชื่อที่ออกไปแล้ว') : ''}
+          ${eliminationOn ? eliminatedPanelHtml(outList, I18n.t('bite.eliminatedListLabel')) : ''}
           <div id="biteResult"></div>
         </section>`;
 
@@ -268,7 +268,7 @@
       for (let i = 0; i < TEETH_COUNT; i++) {
         const btn = document.createElement('button');
         btn.className = 'tooth';
-        btn.setAttribute('aria-label', `ซี่ฟันที่ ${i + 1}`);
+        btn.setAttribute('aria-label', I18n.t('bite.toothAria', { n: i + 1 }));
         positionTooth(btn, i, angles);
         applyToothVisual(btn, i, { pressed, badToothIndex, gameOver, emoji: theme.emoji });
         btn.addEventListener('click', () => handlePress(container, i));
@@ -279,7 +279,7 @@
     function renderTurnBanner(container) {
       const banner = container.querySelector('#turnBanner');
       if (banner && !gameOver) {
-        banner.textContent = `ตาของ: ${playersRef[turnIndex]}`;
+        banner.textContent = I18n.t('bite.turnOf', { name: playersRef[turnIndex] });
       }
     }
 
@@ -330,14 +330,14 @@
         <div class="shatter-wrap">
           <div class="winner-name" style="color:var(--coral-pop)">💥 GAME OVER</div>
         </div>
-        <p style="margin:6px 0 16px;font-size:1.1rem">${theme.biteWord} <b>${Utils.escapeHtml(loser)}</b> ออกจากเกม!</p>
+        <p style="margin:6px 0 16px;font-size:1.1rem">${I18n.t('bite.lostMessage', { biteWord: theme.biteWord, name: Utils.escapeHtml(loser) })}</p>
         <div class="btn-row" style="justify-content:center">
-          <button class="btn" id="biteRestartBtn">🔁 ${eliminationOn ? 'รอบต่อไป' : 'Restart'}</button>
+          <button class="btn" id="biteRestartBtn">🔁 ${eliminationOn ? I18n.t('bite.nextRound') : 'Restart'}</button>
           <button class="btn secondary" id="biteShareBtn">📤 Share Result</button>
         </div>`;
       WinnerFX.shatterBurst(resultEl.querySelector('.shatter-wrap'));
       container.querySelector('#biteRestartBtn').addEventListener('click', () => newRound(container));
-      container.querySelector('#biteShareBtn').addEventListener('click', () => ShareResult.open(theme.title, [`${loser} (ผู้แพ้)`]));
+      container.querySelector('#biteShareBtn').addEventListener('click', () => ShareResult.open(theme.title, [I18n.t('bite.loserLabel', { name: loser })]));
     }
 
     return {

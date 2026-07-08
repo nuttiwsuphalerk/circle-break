@@ -9,8 +9,8 @@ const GameSettingsUtil = (() => {
   function attachGearButton(stageEl, onClick) {
     const btn = document.createElement('button');
     btn.className = 'game-gear-btn';
-    btn.setAttribute('aria-label', 'ตั้งค่าเกมนี้');
-    btn.title = 'ตั้งค่าเกมนี้';
+    btn.setAttribute('aria-label', I18n.t('common.gameSettingsAria'));
+    btn.title = I18n.t('common.gameSettingsAria');
     btn.textContent = '⚙';
     btn.addEventListener('click', onClick);
     stageEl.appendChild(btn);
@@ -31,12 +31,12 @@ const GameSettingsUtil = (() => {
     modal.className = 'modal glass';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', `ตั้งค่า ${cfg.title}`);
+    modal.setAttribute('aria-label', I18n.t('gsettings.modalAria', { title: cfg.title }));
 
-    let html = `<h3>⚙ ตั้งค่า · ${Utils.escapeHtml(cfg.title)}</h3>`;
+    let html = `<h3>${I18n.t('gsettings.modalTitle', { title: Utils.escapeHtml(cfg.title) })}</h3>`;
     html += `<div class="settings-row" style="padding-top:4px">
-      <span>👥 แก้ไข / เพิ่มชื่อผู้เล่น</span>
-      <button class="btn secondary" id="gsEditNamesBtn">แก้ไข</button>
+      <span>${I18n.t('gsettings.editPlayersLabel')}</span>
+      <button class="btn secondary" id="gsEditNamesBtn">${I18n.t('common.edit')}</button>
     </div>`;
 
     if (cfg.duration) {
@@ -59,19 +59,19 @@ const GameSettingsUtil = (() => {
         <div class="switch ${cfg.timer.on ? 'on' : ''}" id="gsTimerSwitch" role="switch" aria-checked="${cfg.timer.on}" tabindex="0"></div>
       </div>
       <div class="settings-subrow">
-        <span style="color:var(--text-dim); font-size:.88rem">เวลาต่อรอบ (วินาที)</span>
+        <span style="color:var(--text-dim); font-size:.88rem">${I18n.t('gsettings.secondsPerRound')}</span>
         <input type="number" min="3" max="60" step="1" class="timer-seconds-input" id="gsTimerSeconds" value="${cfg.timer.seconds}">
       </div>`;
     }
 
     if (cfg.elimination && cfg.elimination.eliminatedList && cfg.elimination.eliminatedList.length) {
       html += `<div class="eliminated-panel">
-        <div class="eliminated-title">${cfg.elimination.eliminatedListLabel || 'รายชื่อที่คัดออกแล้ว'}</div>
+        <div class="eliminated-title">${cfg.elimination.eliminatedListLabel || I18n.t('gsettings.defaultEliminatedLabel')}</div>
         <div class="eliminated-chips">${cfg.elimination.eliminatedList.map((n, i) => `<span class="eliminated-chip"><span class="rank">${i + 1}.</span>${Utils.escapeHtml(n)}</span>`).join('')}</div>
       </div>`;
     }
 
-    html += `<div class="btn-row" style="margin-top:12px"><button class="btn" id="gsCloseBtn">ปิด</button></div>`;
+    html += `<div class="btn-row" style="margin-top:12px"><button class="btn" id="gsCloseBtn">${I18n.t('common.close')}</button></div>`;
     modal.innerHTML = html;
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);

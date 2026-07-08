@@ -40,6 +40,212 @@ const Storage = (() => {
 })();
 
 /* ---------------------------------------------------------------------
+   I18n — Thai/English text engine. Detects the visitor's language from
+   their browser settings (falls back to Thai, since that's this site's
+   home market), remembers an explicit override, and exposes a single
+   t(key, vars) lookup every other module calls instead of hardcoding
+   strings. Language changes take effect on next render — the toggle
+   button simply reloads the page, which is simpler and safer than
+   trying to make every game's DOM reactive to a language switch.
+   --------------------------------------------------------------------- */
+const I18n = (() => {
+  const DICT = {
+    th: {
+      header: { backAria: 'กลับหน้าแรก', backText: '← กลับ', settingsAria: 'ตั้งค่า', langToggleAria: 'เปลี่ยนภาษา' },
+      common: {
+        close: 'ปิด', edit: 'แก้ไข', cancel: 'ยกเลิก', import: 'นำเข้า',
+        needMinPlayers: 'ต้องมีผู้เล่นอย่างน้อย {{n}} คน',
+        gameNotFound: 'ไม่พบเกมนี้',
+        gameSettingsAria: 'ตั้งค่าเกมนี้',
+        allDone: '🎉 คัดครบทุกคนแล้ว!',
+        winnerOrderAll: 'ลำดับผู้ชนะทั้งหมด',
+        alreadyWon: 'รายชื่อที่ชนะไปแล้ว',
+        restartAll: '🔁 เริ่มใหม่ทั้งหมด',
+        eliminationToggleWinner: '🏅 คัดชื่อผู้ชนะออกจากรอบถัดไป'
+      },
+      home: {
+        title: 'วงแตก', tagline: 'สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง', chooseGame: 'เลือกเกม',
+        pageTitle: 'วงแตก (Circle Break) — สุ่มชื่อ หมุนวงล้อ แข่งวิ่ง เกมปาร์ตี้ออนไลน์ฟรี',
+        namePicker_label: 'Name Picker', namePicker_desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', namePicker_sub: 'เลือกวิธีสุ่มที่ชอบ',
+        spinWheel_label: 'Spin Wheel', spinWheel_desc: 'หมุนวงล้อหาผู้ชนะ',
+        randomPicker_label: 'Random Picker', randomPicker_desc: 'สุ่มชื่อวิ่งไว ๆ',
+        lotteryDraw_label: 'จับฉลาก', lotteryDraw_desc: 'เขย่าโหล หยิบชื่อจากในขวด',
+        fortuneSticks_label: 'เซียมซี', fortuneSticks_desc: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา',
+        raceGames_label: 'Race Games', raceGames_desc: 'แข่งวิ่งลุ้นเส้นชัย', raceGames_sub: 'ทุกเกมยุติธรรม ไม่มีใครได้เปรียบ',
+        runningRace_label: 'Running Race', runningRace_desc: 'วิ่งแข่งกันดิบ ๆ',
+        duckRace_label: 'Duck Race', duckRace_desc: 'เป็ดว่ายน้ำ ใครไวกว่า',
+        carRace_label: 'Car Race', carRace_desc: 'ซิ่งรถ nitro ลุ้นกันมัน',
+        survivalGames_label: 'Survival Games', survivalGames_desc: 'ผลัดกันกด ใครซวยออกไป', survivalGames_sub: 'ใครโดนงับ คนนั้นออก',
+        crocodileBite_label: 'Crocodile Bite', crocodileBite_desc: 'งับใครไม่รู้ ลุ้นระทึก',
+        sharkBite_label: 'Shark Bite', sharkBite_desc: 'ธีมฉลาม สนุกไม่แพ้กัน'
+      },
+      player: {
+        panelAria: 'รายชื่อผู้เล่น', addNameLabel: 'เพิ่มชื่อผู้เล่น', addNamePlaceholder: 'พิมพ์ชื่อแล้วกด Enter…', addBtn: '+ เพิ่ม',
+        countLabel: '{{count}} / {{max}} คน',
+        emptyState: 'ยังไม่มีผู้เล่น เพิ่มชื่ออย่างน้อย 2 คนเพื่อเริ่มเล่น',
+        editAria: 'แก้ไขชื่อ {{name}}', removeAria: 'ลบ {{name}}', editPrompt: 'แก้ไขชื่อผู้เล่น',
+        importAria: 'นำเข้ารายชื่อผู้เล่น', importTitle: '📥 นำเข้ารายชื่อ',
+        importHint: 'วางชื่อทีละบรรทัด หรือคั่นด้วยจุลภาค (,) ระบบจะลบช่องว่างและชื่อซ้ำให้อัตโนมัติ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)<br><b>หมายเหตุ:</b> การนำเข้าจะแทนที่รายชื่อผู้เล่นปัจจุบันทั้งหมด',
+        confirmClearAll: 'ล้างรายชื่อผู้เล่นทั้งหมด?', shuffled: 'สลับลำดับผู้เล่นแล้ว',
+        importedWithSkipped: 'นำเข้า {{count}} ชื่อ (ตัดชื่อซ้ำ {{skipped}} ชื่อ)', importedSuccess: 'นำเข้า {{count}} ชื่อสำเร็จ',
+        editModalAria: 'แก้ไขผู้เล่น', editModalTitle: '👥 แก้ไข / เพิ่มชื่อผู้เล่น',
+        errNoName: 'กรุณาใส่ชื่อ', errMaxPlayers: 'เพิ่มได้สูงสุด {{max}} คน', errDuplicate: 'มีชื่อนี้อยู่แล้ว',
+        errNotFound: 'ไม่พบชื่อนี้', errMinImport: 'ต้องมีผู้เล่นอย่างน้อย {{min}} คน'
+      },
+      share: { aria: 'แชร์ผลการแข่งขัน', copied: 'คัดลอกข้อความแล้ว ✅', copyFailed: 'คัดลอกไม่สำเร็จ', imageSaved: 'บันทึกรูปภาพแล้ว ✅' },
+      gsettings: {
+        modalAria: 'ตั้งค่า {{title}}', modalTitle: '⚙ ตั้งค่า · {{title}}',
+        editPlayersLabel: '👥 แก้ไข / เพิ่มชื่อผู้เล่น', secondsPerRound: 'เวลาต่อรอบ (วินาที)',
+        defaultEliminatedLabel: 'รายชื่อที่คัดออกแล้ว'
+      },
+      settingsPanel: {
+        tagline: 'ปรับแต่งการเล่นให้ถูกใจ',
+        contactTitle: 'ติดต่อ / แจ้งปัญหา', contactBody: 'พบปัญหาการใช้งาน หรืออยากแนะนำเกมใหม่? ส่งอีเมลมาได้เลยที่',
+        adsPrivacyTitle: 'โฆษณา & ความเป็นส่วนตัว',
+        adsPrivacyBody: 'เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้เพื่อปรับโฆษณาให้ตรงความสนใจ หากต้องการปิดโฆษณาแบบปรับตามความสนใจ (personalized ads) จัดการได้ที่',
+        adsPrivacyLink: 'การตั้งค่าโฆษณาของ Google',
+        confirmResetAll: 'ล้างข้อมูลทั้งหมด (ผู้เล่น, การตั้งค่า) ในเครื่องนี้?', resetDone: 'ล้างข้อมูลแล้ว กำลังกลับหน้าแรก…'
+      },
+      footer: {
+        privacyNote: 'ไม่มีระบบสมาชิก · ไม่มีฐานข้อมูลผู้เล่นบนเซิร์ฟเวอร์ · ชื่อผู้เล่นเก็บในเครื่องคุณเท่านั้น',
+        adsCredit: 'เว็บไซต์นี้แสดงโฆษณาผ่าน Google AdSense ซึ่งอาจใช้คุกกี้ —', adsCreditLink: 'ดูวิธีที่ Google ใช้ข้อมูลโฆษณา'
+      },
+      ad: { label: 'โฆษณา' },
+      spinWheel: { tagline: 'หมุนวงล้อ ใครจะเป็นผู้ถูกเลือก', durationLabel: '🕒 ตั้งเวลาหน่วงการหมุน (วินาที)', spinBtn: '🎡 หมุนวงล้อ' },
+      randomPicker: { tagline: 'กดสุ่ม แล้วลุ้นว่าใครจะโดนเลือก', durationLabel: '🕒 ตั้งเวลาหน่วงการสุ่ม (วินาที)', ready: 'พร้อมสุ่ม!' },
+      lotteryDraw: { title: 'จับฉลาก', tagline: 'เขย่าโหล แล้วหยิบชื่อผู้โชคดี', durationLabel: '🕒 ตั้งเวลาหน่วงการเขย่าโหล (วินาที)', drawBtn: '🎫 จับฉลาก' },
+      fortuneSticks: { title: 'เซียมซี', tagline: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา', durationLabel: '🕒 ตั้งเวลาหน่วงการเขย่า (วินาที)', drawBtn: '🥢 เขย่าเซียมซี' },
+      race: {
+        runningTagline: 'วิ่งแข่งกันดิบ ๆ ใครถึงเส้นชัยก่อน', duckTagline: 'เป็ดว่ายน้ำ ตัวไหนจะไวที่สุด', carTagline: 'ซิ่งรถหลายสี ใครใช้ Nitro ไวกว่ากัน',
+        eliminationLabel: '🏅 คัดผู้ชนะออกจากรอบถัดไป', timerLabel: '⏱ จำกัดเวลาต่อรอบ (ตัดจบอัตโนมัติ)',
+        startBtn: '🏁 เริ่มการแข่งขัน', go: 'ไป!', lastOneLeft: '🎉 เหลือคนเดียว: <b>{{name}}</b>'
+      },
+      bite: {
+        crocTagline: 'ผลัดกันกด ระวังโดนงับ', sharkTagline: 'ธีมฉลาม ลุ้นไม่แพ้กัน',
+        biteWordCroc: 'งับ!', biteWordShark: 'ฉลามงับ!',
+        eliminationLabel: '🏅 ตัดผู้แพ้ออกจากรอบถัดไป', eliminatedListLabel: 'รายชื่อที่ออกไปแล้ว', timerLabel: '⏱ ตั้งเวลาต่อตา',
+        toothAria: 'ซี่ฟันที่ {{n}}', turnOf: 'ตาของ: {{name}}',
+        lastSurvivor: '🏆 ผู้รอดชีวิตคนสุดท้าย: <b>{{name}}</b>', allDone: '🎉 จบเกมแล้ว!', eliminatedOrder: 'ลำดับผู้ที่ออกไปแล้ว',
+        lostMessage: '{{biteWord}} <b>{{name}}</b> ออกจากเกม!', nextRound: 'รอบต่อไป', loserLabel: '{{name}} (ผู้แพ้)'
+      }
+    },
+    en: {
+      header: { backAria: 'Back to home', backText: '← Back', settingsAria: 'Settings', langToggleAria: 'Change language' },
+      common: {
+        close: 'Close', edit: 'Edit', cancel: 'Cancel', import: 'Import',
+        needMinPlayers: 'Need at least {{n}} players',
+        gameNotFound: 'Game not found',
+        gameSettingsAria: 'Game settings',
+        allDone: '🎉 Everyone has been picked!',
+        winnerOrderAll: 'Full winner order',
+        alreadyWon: 'Already won',
+        restartAll: '🔁 Restart All',
+        eliminationToggleWinner: '🏅 Remove winner from next round'
+      },
+      home: {
+        title: 'Circle Break', tagline: 'Shuffle friends, stir the chaos, thrill the whole crew', chooseGame: 'Choose a Game',
+        pageTitle: 'Circle Break — Random Name Picker, Spin Wheel, Races & Party Games',
+        namePicker_label: 'Name Picker', namePicker_desc: 'Pick one name, or spin the wheel', namePicker_sub: 'Choose how you want to pick',
+        spinWheel_label: 'Spin Wheel', spinWheel_desc: 'Spin the wheel to find a winner',
+        randomPicker_label: 'Random Picker', randomPicker_desc: 'Fast, running-name randomizer',
+        lotteryDraw_label: 'Lottery Draw', lotteryDraw_desc: 'Shake the jar, draw a name',
+        fortuneSticks_label: 'Fortune Sticks', fortuneSticks_desc: 'Shake the cup and see which stick pops out',
+        raceGames_label: 'Race Games', raceGames_desc: 'Race to the finish line', raceGames_sub: 'Every game is fair — no one has an edge',
+        runningRace_label: 'Running Race', runningRace_desc: 'A raw, straight-up footrace',
+        duckRace_label: 'Duck Race', duckRace_desc: "Swimming ducks — who's fastest?",
+        carRace_label: 'Car Race', carRace_desc: 'Nitro-fueled cars, thrilling finish',
+        survivalGames_label: 'Survival Games', survivalGames_desc: "Take turns pressing — who's out of luck?", survivalGames_sub: 'Whoever gets bitten is out',
+        crocodileBite_label: 'Crocodile Bite', crocodileBite_desc: 'Nail-biting bite roulette',
+        sharkBite_label: 'Shark Bite', sharkBite_desc: 'Shark-themed, just as fun'
+      },
+      player: {
+        panelAria: 'Player list', addNameLabel: 'Add player name', addNamePlaceholder: 'Type a name and press Enter…', addBtn: '+ Add',
+        countLabel: '{{count}} / {{max}} players',
+        emptyState: 'No players yet — add at least 2 names to start',
+        editAria: 'Edit name {{name}}', removeAria: 'Remove {{name}}', editPrompt: 'Edit player name',
+        importAria: 'Import player names', importTitle: '📥 Import Names',
+        importHint: 'Paste one name per line, or separate with commas (,). Extra spaces and duplicates are removed automatically (case-insensitive).<br><b>Note:</b> importing replaces the entire current player list.',
+        confirmClearAll: 'Clear all players?', shuffled: 'Player order shuffled',
+        importedWithSkipped: 'Imported {{count}} names (skipped {{skipped}} duplicates)', importedSuccess: 'Successfully imported {{count}} names',
+        editModalAria: 'Edit players', editModalTitle: '👥 Edit / Add Player Names',
+        errNoName: 'Please enter a name', errMaxPlayers: 'Maximum {{max}} players', errDuplicate: 'This name already exists',
+        errNotFound: 'Name not found', errMinImport: 'Need at least {{min}} players'
+      },
+      share: { aria: 'Share result', copied: 'Text copied ✅', copyFailed: 'Copy failed', imageSaved: 'Image saved ✅' },
+      gsettings: {
+        modalAria: '{{title}} Settings', modalTitle: '⚙ Settings · {{title}}',
+        editPlayersLabel: '👥 Edit / add player names', secondsPerRound: 'Time per round (seconds)',
+        defaultEliminatedLabel: 'Already eliminated'
+      },
+      settingsPanel: {
+        tagline: 'Customize your play experience',
+        contactTitle: 'Contact / Report an Issue', contactBody: 'Found a bug, or have a game idea? Email us at',
+        adsPrivacyTitle: 'Ads & Privacy',
+        adsPrivacyBody: 'This site shows ads via Google AdSense, which may use cookies to personalize ads. To opt out of personalized ads, manage it at',
+        adsPrivacyLink: 'Google Ads Settings',
+        confirmResetAll: 'Clear all data (players, settings) on this device?', resetDone: 'Data cleared, returning home…'
+      },
+      footer: {
+        privacyNote: 'No accounts · No player database on any server · Names are stored on your device only',
+        adsCredit: 'This site shows ads via Google AdSense, which may use cookies —', adsCreditLink: 'See how Google uses ad data'
+      },
+      ad: { label: 'Advertisement' },
+      spinWheel: { tagline: 'Spin the wheel — who will be chosen?', durationLabel: '🕒 Spin delay (seconds)', spinBtn: '🎡 Spin the Wheel' },
+      randomPicker: { tagline: 'Press random and see who gets picked', durationLabel: '🕒 Pick delay (seconds)', ready: 'Ready to pick!' },
+      lotteryDraw: { title: 'Lottery Draw', tagline: 'Shake the jar and draw a lucky name', durationLabel: '🕒 Jar shake delay (seconds)', drawBtn: '🎫 Draw' },
+      fortuneSticks: { title: 'Fortune Sticks', tagline: 'Shake the cup and see which stick falls out', durationLabel: '🕒 Shake delay (seconds)', drawBtn: '🥢 Shake the Cup' },
+      race: {
+        runningTagline: 'A raw footrace — who crosses first?', duckTagline: 'Swimming ducks — which one is fastest?', carTagline: "Multicolor cars — whose nitro is faster?",
+        eliminationLabel: '🏅 Remove winner from next round', timerLabel: '⏱ Time limit per round (auto cutoff)',
+        startBtn: '🏁 Start Race', go: 'Go!', lastOneLeft: '🎉 Only one left: <b>{{name}}</b>'
+      },
+      bite: {
+        crocTagline: 'Take turns pressing — watch out for the bite', sharkTagline: 'Shark theme, thrills all the same',
+        biteWordCroc: 'Chomp!', biteWordShark: 'Shark bite!',
+        eliminationLabel: '🏅 Remove loser from next round', eliminatedListLabel: 'Already eliminated', timerLabel: '⏱ Set time per turn',
+        toothAria: 'Tooth #{{n}}', turnOf: "{{name}}'s turn",
+        lastSurvivor: '🏆 Last survivor: <b>{{name}}</b>', allDone: '🎉 Game over!', eliminatedOrder: 'Elimination order',
+        lostMessage: '{{biteWord}} <b>{{name}}</b> is out!', nextRound: 'Next Round', loserLabel: '{{name}} (loser)'
+      }
+    }
+  };
+
+  function detect() {
+    const saved = Storage.get('lang', null);
+    if (saved === 'th' || saved === 'en') return saved;
+    const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+    const isThai = langs.some(l => (l || '').toLowerCase().startsWith('th'));
+    return isThai ? 'th' : 'en';
+  }
+
+  let current = detect();
+
+  function lookup(dictForLang, key) {
+    return key.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, dictForLang);
+  }
+
+  function t(key, vars) {
+    let str = lookup(DICT[current], key);
+    if (str === undefined) str = lookup(DICT.en, key); // fallback if a key is ever missing in one dict
+    if (str === undefined) return key;
+    if (vars) {
+      Object.keys(vars).forEach(k => { str = str.replace(new RegExp('{{' + k + '}}', 'g'), vars[k]); });
+    }
+    return str;
+  }
+
+  function lang() { return current; }
+
+  function setLang(l) {
+    if (l !== 'th' && l !== 'en') return;
+    Storage.set('lang', l);
+    window.location.reload();
+  }
+
+  return { t, lang, setLang, detect };
+})();
+
+/* ---------------------------------------------------------------------
    Utils — shared pure helpers used by every game.
    --------------------------------------------------------------------- */
 const Utils = (() => {
@@ -121,9 +327,9 @@ const PlayerStore = (() => {
 
   function add(name) {
     const trimmed = (name || '').trim();
-    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
-    if (players.length >= MAX_PLAYERS) return { ok: false, error: `เพิ่มได้สูงสุด ${MAX_PLAYERS} คน` };
-    if (existsCaseInsensitive(trimmed)) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    if (!trimmed) return { ok: false, error: I18n.t('player.errNoName') };
+    if (players.length >= MAX_PLAYERS) return { ok: false, error: I18n.t('player.errMaxPlayers', { max: MAX_PLAYERS }) };
+    if (existsCaseInsensitive(trimmed)) return { ok: false, error: I18n.t('player.errDuplicate') };
     players.push(trimmed);
     persist();
     return { ok: true };
@@ -136,11 +342,11 @@ const PlayerStore = (() => {
 
   function edit(oldName, newName) {
     const trimmed = (newName || '').trim();
-    if (!trimmed) return { ok: false, error: 'กรุณาใส่ชื่อ' };
+    if (!trimmed) return { ok: false, error: I18n.t('player.errNoName') };
     const dup = players.some(p => p !== oldName && p.toLowerCase() === trimmed.toLowerCase());
-    if (dup) return { ok: false, error: 'มีชื่อนี้อยู่แล้ว' };
+    if (dup) return { ok: false, error: I18n.t('player.errDuplicate') };
     const idx = players.indexOf(oldName);
-    if (idx === -1) return { ok: false, error: 'ไม่พบชื่อนี้' };
+    if (idx === -1) return { ok: false, error: I18n.t('player.errNotFound') };
     players[idx] = trimmed;
     persist();
     return { ok: true };
@@ -178,7 +384,7 @@ const PlayerStore = (() => {
       if (result.length >= MAX_PLAYERS) break;
     }
     if (result.length < MIN_PLAYERS) {
-      return { ok: false, error: `ต้องมีผู้เล่นอย่างน้อย ${MIN_PLAYERS} คน` };
+      return { ok: false, error: I18n.t('player.errMinImport', { min: MIN_PLAYERS }) };
     }
     players = result;
     persist();
@@ -475,8 +681,8 @@ const App = (() => {
   let currentGame = null;
   let homePlayerInstance = null;
 
-  const HOME_TITLE = 'วงแตก';
-  const HOME_TAGLINE = 'สุ่มเพื่อน ปนวุ่น ลุ้นกันทั้งวง';
+  const HOME_TITLE = () => I18n.t('home.title');
+  const HOME_TAGLINE = () => I18n.t('home.tagline');
 
   function destroyHomePlayerInstance() {
     if (homePlayerInstance) { homePlayerInstance.destroy(); homePlayerInstance = null; }
@@ -492,16 +698,16 @@ const App = (() => {
     SoundManager.play('click');
     renderHome();
     backBtn().style.display = 'none';
-    headerTitle().textContent = HOME_TITLE;
-    headerTagline().textContent = HOME_TAGLINE;
+    headerTitle().textContent = HOME_TITLE();
+    headerTagline().textContent = HOME_TAGLINE();
     window.scrollTo({ top: 0, behavior: AnimationSetting.isEnabled() ? 'smooth' : 'auto' });
   }
 
   function openGame(id) {
     const game = GameManager.get(id);
-    if (!game) { showToast('ไม่พบเกมนี้'); return; }
+    if (!game) { showToast(I18n.t('common.gameNotFound')); return; }
     if (game.requiresPlayers !== false && !PlayerStore.canStartGame()) {
-      showToast(`ต้องมีผู้เล่นอย่างน้อย ${PlayerStore.MIN_PLAYERS} คน`);
+      showToast(I18n.t('common.needMinPlayers', { n: PlayerStore.MIN_PLAYERS }));
       return;
     }
     unmountCurrent();
@@ -547,21 +753,21 @@ const App = (() => {
     // Settings is reached via the gear icon in the header only (see index.html) —
     // it isn't a menu card here, so the grid stays focused on the games.
     const menuItems = [
-      { emoji: '🎲', label: 'Name Picker', desc: 'สุ่มชื่อเดี่ยว หรือหมุนวงล้อ', onClick: () => openSubmenu([
-          { emoji: '🎡', label: 'Spin Wheel', desc: 'หมุนวงล้อหาผู้ชนะ', onClick: () => openGame('spin-wheel') },
-          { emoji: '🎯', label: 'Random Picker', desc: 'สุ่มชื่อวิ่งไว ๆ', onClick: () => openGame('random-picker') },
-          { emoji: '🎫', label: 'จับฉลาก', desc: 'เขย่าโหล หยิบชื่อจากในขวด', onClick: () => openGame('lottery-draw') },
-          { emoji: '🥢', label: 'เซียมซี', desc: 'เขย่าเซียมซี ลุ้นไม้ที่หลุดออกมา', onClick: () => openGame('fortune-sticks') },
-        ], 'Name Picker', 'เลือกวิธีสุ่มที่ชอบ') },
-      { emoji: '🏁', label: 'Race Games', desc: 'แข่งวิ่งลุ้นเส้นชัย', onClick: () => openSubmenu([
-          { emoji: '🏃', label: 'Running Race', desc: 'วิ่งแข่งกันดิบ ๆ', onClick: () => openGame('running-race') },
-          { emoji: '🦆', label: 'Duck Race', desc: 'เป็ดว่ายน้ำ ใครไวกว่า', onClick: () => openGame('duck-race') },
-          { emoji: '🚗', label: 'Car Race', desc: 'ซิ่งรถ nitro ลุ้นกันมัน', onClick: () => openGame('car-race') },
-        ], 'Race Games', 'ทุกเกมยุติธรรม ไม่มีใครได้เปรียบ') },
-      { emoji: '🐊', label: 'Survival Games', desc: 'ผลัดกันกด ใครซวยออกไป', onClick: () => openSubmenu([
-          { emoji: '🐊', label: 'Crocodile Bite', desc: 'งับใครไม่รู้ ลุ้นระทึก', onClick: () => openGame('crocodile-bite') },
-          { emoji: '🦈', label: 'Shark Bite', desc: 'ธีมฉลาม สนุกไม่แพ้กัน', onClick: () => openGame('shark-bite') },
-        ], 'Survival Games', 'ใครโดนงับ คนนั้นออก') },
+      { emoji: '🎲', label: I18n.t('home.namePicker_label'), desc: I18n.t('home.namePicker_desc'), onClick: () => openSubmenu([
+          { emoji: '🎡', label: I18n.t('home.spinWheel_label'), desc: I18n.t('home.spinWheel_desc'), onClick: () => openGame('spin-wheel') },
+          { emoji: '🎯', label: I18n.t('home.randomPicker_label'), desc: I18n.t('home.randomPicker_desc'), onClick: () => openGame('random-picker') },
+          { emoji: '🎫', label: I18n.t('home.lotteryDraw_label'), desc: I18n.t('home.lotteryDraw_desc'), onClick: () => openGame('lottery-draw') },
+          { emoji: '🥢', label: I18n.t('home.fortuneSticks_label'), desc: I18n.t('home.fortuneSticks_desc'), onClick: () => openGame('fortune-sticks') },
+        ], I18n.t('home.namePicker_label'), I18n.t('home.namePicker_sub')) },
+      { emoji: '🏁', label: I18n.t('home.raceGames_label'), desc: I18n.t('home.raceGames_desc'), onClick: () => openSubmenu([
+          { emoji: '🏃', label: I18n.t('home.runningRace_label'), desc: I18n.t('home.runningRace_desc'), onClick: () => openGame('running-race') },
+          { emoji: '🦆', label: I18n.t('home.duckRace_label'), desc: I18n.t('home.duckRace_desc'), onClick: () => openGame('duck-race') },
+          { emoji: '🚗', label: I18n.t('home.carRace_label'), desc: I18n.t('home.carRace_desc'), onClick: () => openGame('car-race') },
+        ], I18n.t('home.raceGames_label'), I18n.t('home.raceGames_sub')) },
+      { emoji: '🐊', label: I18n.t('home.survivalGames_label'), desc: I18n.t('home.survivalGames_desc'), onClick: () => openSubmenu([
+          { emoji: '🐊', label: I18n.t('home.crocodileBite_label'), desc: I18n.t('home.crocodileBite_desc'), onClick: () => openGame('crocodile-bite') },
+          { emoji: '🦈', label: I18n.t('home.sharkBite_label'), desc: I18n.t('home.sharkBite_desc'), onClick: () => openGame('shark-bite') },
+        ], I18n.t('home.survivalGames_label'), I18n.t('home.survivalGames_sub')) },
     ];
 
     menuItems.forEach(item => {
@@ -574,12 +780,53 @@ const App = (() => {
 
     const heading = document.createElement('div');
     heading.className = 'section-title';
-    heading.innerHTML = `<span class="eyebrow-tag">เลือกเกม</span>`;
+    heading.innerHTML = `<span class="eyebrow-tag">${I18n.t('home.chooseGame')}</span>`;
     mainEl().appendChild(heading);
     mainEl().appendChild(grid);
   }
 
+  /** Applies the detected/saved language to the static shell markup that
+      ships in index.html (header, footer, ad label) before any game
+      has rendered — everything else is generated fresh by JS already,
+      so it naturally comes out in the right language via I18n.t(). */
+  function localizeStaticShell() {
+    document.documentElement.lang = I18n.lang();
+    document.title = I18n.t('home.pageTitle');
+
+    headerTitle().textContent = HOME_TITLE();
+    headerTagline().textContent = HOME_TAGLINE();
+
+    backBtn().setAttribute('aria-label', I18n.t('header.backAria'));
+    backBtn().textContent = I18n.t('header.backText');
+
+    const settingsBtn = document.getElementById('settingsShortcut');
+    if (settingsBtn) {
+      settingsBtn.setAttribute('aria-label', I18n.t('header.settingsAria'));
+      settingsBtn.title = I18n.t('header.settingsAria');
+    }
+
+    const adLabel = document.querySelector('.ad-slot-label');
+    if (adLabel) adLabel.textContent = I18n.t('ad.label');
+
+    const privacyNote = document.getElementById('footerPrivacyNote');
+    if (privacyNote) privacyNote.textContent = I18n.t('footer.privacyNote');
+
+    const adsCredit = document.getElementById('footerAdsCredit');
+    if (adsCredit) {
+      adsCredit.innerHTML = `${I18n.t('footer.adsCredit')} <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">${I18n.t('footer.adsCreditLink')}</a>`;
+    }
+
+    const langBtn = document.getElementById('langToggleBtn');
+    if (langBtn) {
+      langBtn.textContent = I18n.lang() === 'th' ? 'ไทย' : 'EN';
+      langBtn.setAttribute('aria-label', I18n.t('header.langToggleAria'));
+      langBtn.title = I18n.t('header.langToggleAria');
+      langBtn.addEventListener('click', () => I18n.setLang(I18n.lang() === 'th' ? 'en' : 'th'));
+    }
+  }
+
   function init() {
+    localizeStaticShell();
     ThemeSetting.apply();
     AnimationSetting.apply();
     backBtn().addEventListener('click', goHome);

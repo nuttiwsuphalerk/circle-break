@@ -19,7 +19,7 @@
   const THEMES = {
     'running-race': {
       title: 'Running Race',
-      tagline: 'วิ่งแข่งกันดิบ ๆ ใครถึงเส้นชัยก่อน',
+      get tagline() { return I18n.t('race.runningTagline'); },
       sprite: () => '🏃',
       laneBg: '',
       events: [
@@ -33,7 +33,7 @@
     },
     'duck-race': {
       title: 'Duck Race',
-      tagline: 'เป็ดว่ายน้ำ ตัวไหนจะไวที่สุด',
+      get tagline() { return I18n.t('race.duckTagline'); },
       sprite: () => '🦆',
       laneBg: 'linear-gradient(180deg, transparent 0%, rgba(76,217,192,.08) 100%)',
       events: [
@@ -46,7 +46,7 @@
     },
     'car-race': {
       title: 'Car Race',
-      tagline: 'ซิ่งรถหลายสี ใครใช้ Nitro ไวกว่ากัน',
+      get tagline() { return I18n.t('race.carTagline'); },
       sprite: (i) => '🚗',
       laneBg: 'repeating-linear-gradient(90deg, transparent 0 24px, rgba(241,238,251,.06) 24px 26px)',
       events: [
@@ -90,14 +90,14 @@
       GameSettingsUtil.openModal({
         title: theme.title,
         elimination: {
-          label: '🏅 คัดผู้ชนะออกจากรอบถัดไป',
+          label: I18n.t('race.eliminationLabel'),
           on: eliminationOn,
           eliminatedList: pickedList,
-          eliminatedListLabel: 'รายชื่อที่ชนะไปแล้ว',
+          eliminatedListLabel: I18n.t('common.alreadyWon'),
           onToggle: (next) => { eliminationOn = next; if (next) pickedList = []; buildStage(container); }
         },
         timer: {
-          label: '⏱ จำกัดเวลาต่อรอบ (ตัดจบอัตโนมัติ)',
+          label: I18n.t('race.timerLabel'),
           on: timerOn,
           seconds: timerSeconds,
           onToggle: (next) => { timerOn = next; buildStage(container); },
@@ -112,14 +112,14 @@
 
       if (eliminationOn && players.length < 2) {
         const doneMsg = players.length === 1
-          ? `🎉 เหลือคนเดียว: <b>${Utils.escapeHtml(players[0])}</b>`
-          : '🎉 คัดครบทุกคนแล้ว!';
+          ? I18n.t('race.lastOneLeft', { name: Utils.escapeHtml(players[0]) })
+          : I18n.t('common.allDone');
         container.innerHTML = `
           <section class="glass game-stage">
             <div class="winner-name">${doneMsg}</div>
-            ${eliminatedPanelHtml(pickedList, 'ลำดับผู้ชนะทั้งหมด')}
+            ${eliminatedPanelHtml(pickedList, I18n.t('common.winnerOrderAll'))}
             <div class="btn-row" style="justify-content:center">
-              <button class="btn" id="raceResetElimBtn">🔁 เริ่มใหม่ทั้งหมด</button>
+              <button class="btn" id="raceResetElimBtn">${I18n.t('common.restartAll')}</button>
             </div>
           </section>`;
         GameSettingsUtil.attachGearButton(container.querySelector('.game-stage'), () => openGearSettings(container));
@@ -139,9 +139,9 @@
               </div>`).join('')}
             <div class="finish-line"></div>
           </div>
-          ${eliminationOn ? eliminatedPanelHtml(pickedList, 'รายชื่อที่ชนะไปแล้ว') : ''}
+          ${eliminationOn ? eliminatedPanelHtml(pickedList, I18n.t('common.alreadyWon')) : ''}
           <div class="btn-row" style="justify-content:center">
-            <button class="btn" id="raceStartBtn">🏁 เริ่มการแข่งขัน</button>
+            <button class="btn" id="raceStartBtn">${I18n.t('race.startBtn')}</button>
           </div>
           <div id="raceResult" style="margin-top:10px; text-align:center"></div>
         </section>`;
@@ -182,7 +182,7 @@
           overlay.textContent = String(count);
           SoundManager.play('countdown');
         } else {
-          overlay.textContent = 'ไป!';
+          overlay.textContent = I18n.t('race.go');
           SoundManager.play('race');
           clearInterval(timer);
           setTimeout(() => { overlay.remove(); runRace(container, players); }, 400);
