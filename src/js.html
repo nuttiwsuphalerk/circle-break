@@ -818,7 +818,7 @@ const App = (() => {
 
     const langBtn = document.getElementById('langToggleBtn');
     if (langBtn) {
-      langBtn.textContent = I18n.lang() === 'th' ? 'ไทย' : 'EN';
+      langBtn.textContent = I18n.lang() === 'th' ? 'TH' : 'EN';
       langBtn.setAttribute('aria-label', I18n.t('header.langToggleAria'));
       langBtn.title = I18n.t('header.langToggleAria');
       langBtn.addEventListener('click', () => I18n.setLang(I18n.lang() === 'th' ? 'en' : 'th'));
