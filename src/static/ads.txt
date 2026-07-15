@@ -1,7 +1,1 @@
-# Google AdSense authorized sellers file — required at your domain root
-# (e.g. https://yourdomain.com/ads.txt) or AdSense will flag "ads.txt missing"
-# warnings and may serve fewer/no ads on your site.
-#
-# Replace pub-XXXXXXXXXXXXXXXX below with YOUR real AdSense publisher ID
-# (found in AdSense under Account > Settings > Account information).
 google.com, pub-4560904990401103, DIRECT, f08c47fec0942fa0
